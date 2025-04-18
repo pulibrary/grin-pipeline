@@ -1,0 +1,70 @@
+* Overview
+** The Pipeline
+The pipeline is implemented a collection of directories:
+
+#+begin_example
+pipeline/
+├── 01_incoming/         # encrypted tarballs (downloaded)
+├── 02_decrypted/        # decrypted tarballs
+├── 03_extracted/        # extracted files
+├── 04_modified/         # modified tarballs
+├── 05_uploaded/         # post-upload, archiving or success marker
+├── logs/                # optional: logs per stage
+#+end_example
+
+** Configuration
+A sample config.yaml file.  Since the config file contains credentials, it should never be checked into
+version control.  Ideally it would itself be encrypted and decrypted at launch.
+
+#+begin_src sh
+gpg --symmetric --cipher-algo AES256 config.yml
+#+end_src
+
+#+begin_example
+global:
+  temp_dir: /tmp/pipeline
+  gpg_passphrase: "s3cr3t"
+
+filters:
+  - name: decryptor
+    class: Decryptor
+    input_pipe: pipeline/01_incoming
+    output_pipe: pipeline/02_decrypted
+#+end_example
+
+
+** Dynamic Filter Injection
+There is a REPL that can be used to interact with the application
+#+begin_example
+add {name: example, script: filters/example.py, input_pipe: pipeline/in, output_pipe: pipeline/out}
+#+end_example
+
+** Token Format
+#+begin_example
+{
+  "encrypted_path": "/tmp/tmpabc/foo.tar.gz.gpg",
+  "decrypted_path": "/tmp/tmpabc/foo.tar.gz",
+  "log": [
+    {
+      "stage": "decryptor",
+      "timestamp": "2025-04-18T13:30:45Z",
+      "level": "INFO",
+      "message": "Decryption successful"
+    },
+    {
+      "stage": "modifier",
+      "timestamp": "2025-04-18T13:31:22Z",
+      "level": "WARNING",
+      "message": "Checksum mismatch — file replaced"
+    }
+  ]
+}
+#+end_example
+
+
+** Token Log Viewer
+The application includes a CLI script for reviewing the logs
+
+#+begin_src sh
+  python token_log_viewer.py path/to/token.json
+#+end_src

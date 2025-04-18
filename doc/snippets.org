@@ -1,0 +1,39 @@
+;; ---------------------------
+;; Org Babel Integration
+;; ---------------------------
+
+;; Enable supported languages for Org Babel
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((python . t)
+   (shell  . t)
+   (emacs-lisp . t)))
+
+;; Use PDM Python environment for Python blocks
+(setq org-babel-python-command "pdm run python")
+
+;; Don't ask for confirmation every time
+(setq org-confirm-babel-evaluate nil)
+
+;; Enable inline results
+(setq org-babel-default-header-args
+      '((:results . "output replace")
+        (:exports . "both")))
+
+;; Optionally open Org Babel output in a new buffer/window
+(setq org-src-window-setup 'current-window)
+
+
+#+begin_src python :results output
+import os
+print("Token path:", os.getcwd())
+#+end_src
+
+
+#+begin_src sh
+pdm run lint
+#+end_src
+
+#+begin_src emacs-lisp
+(projectile-project-root)
+#+end_src

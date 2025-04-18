@@ -1,0 +1,37 @@
+[project]
+name = "pipeline-project"
+version = "0.1.0"
+description = "A modular asynchronous pipeline for processing encrypted tarballs"
+authors = ["Your Name <you@example.com>"]
+license = "MIT"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "rich",
+    "pyyaml"
+]
+
+[tool.pdm]
+package-dir = "src"
+
+[tool.pdm.scripts]
+orchestrator = "python src/pipeline/orchestrator.py"
+viewer = "python src/pipeline/token_log_viewer.py"
+lint = "basedpyright"
+test = "pytest"
+
+[tool.basedpyright]
+typeCheckingMode = "basic"
+reportMissingImports = true
+reportMissingTypeStubs = false
+pythonVersion = "3.10"
+useLibraryCodeForTypes = true
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[dependency-groups]
+dev = [
+    "basedpyright>=1.28.5",
+]

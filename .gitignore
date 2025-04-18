@@ -1,0 +1,57 @@
+# Bytecode and Python internals
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+
+# PDM artifacts
+__pypackages__/
+pdm.lock
+
+# Config and temp files
+.env
+config.yml
+data/
+*.tmp
+*.log
+*.bak
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# GPG-encrypted config
+config.yml.gpg
+
+# Token and output archives
+*.tar.gz
+*.tar.gz.gpg
+
+# Jupyter and rich console files
+.ipynb_checkpoints/
+.rich_console.json
+
+# Editor settings
+.vscode/
+.idea/
+
+# Emacs files
+*~
+.#*
+*.elc
+projectile-bookmarks.eld
+projectile.cache
+
+
+# Eglot / LSP-mode
+.eglot/
+.lsp-session-v1
+
+# Org-mode
+*.org-id-locations
+*\.org_archive
+org-clock-save.el
+
