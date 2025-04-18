@@ -44,7 +44,7 @@ config.yml.gpg
 *.elc
 projectile-bookmarks.eld
 projectile.cache
-
+.dir-locals
 
 # Eglot / LSP-mode
 .eglot/
