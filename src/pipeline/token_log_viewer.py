@@ -3,6 +3,12 @@ import sys
 from pathlib import Path
 from rich.console import Console
 from rich.table import Table
+from pipeline import logging_config
+import logging
+
+logging_config.configure_logging()
+logger: logging.Logger = logging.getLogger(__name__)
+
 
 
 def load_token(path):

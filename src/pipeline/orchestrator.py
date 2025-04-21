@@ -17,7 +17,13 @@ class Orchestrator:
         self.config = {}
         self.load_config()
 
-    def load_config(self):
+    def load_config(self) -> None:
+        with open(self.config_path, 'r') as f:
+            self.config = yaml.safe_load(f)
+        logging.info("Configuration loaded successfully.")
+
+
+    def load_encrypted_config(self):
         """Decrypt and load the GPG-encrypted YAML config file."""
         decrypted_config = tempfile.NamedTemporaryFile(delete=False)
         decrypted_config.close()
@@ -135,6 +141,7 @@ if __name__ == '__main__':
         print("Please set the GPG_PASSPHRASE environment variable.")
         sys.exit(1)
 
-    config_file = 'config.yml.gpg'
+    # config_file = 'config.yml.gpg'
+    config_file = 'config.yml'
     orchestrator = Orchestrator(config_file)
     orchestrator.run()
