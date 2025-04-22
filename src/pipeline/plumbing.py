@@ -6,6 +6,7 @@ from datetime import datetime, date, time, timezone
 import time
 import yaml
 import logging
+from typing import Optional
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -15,10 +16,14 @@ class Token:
         self.name = name
         self.content = content
 
-    def write_log(self, level:str, message:str):
+    def write_log(self, message:str, level:Optional[str] = None,  stage:Optional[str] = None):
         entry:dict = {"timestamp": str(datetime.now(timezone.utc)),
-                      "level": level,
                       "message": message}
+        if stage:
+            entry['stage'] = stage
+        if level:
+            entry['level'] = level
+
         self.content.setdefault("log", []).append(entry)
 
 
@@ -65,39 +70,23 @@ class Filter:
         self.stage_name = self.__class__.__name__.lower()
 
     def log_to_token(self, token, level, message):
-        entry = {
-            "stage": self.stage_name,
-            "timestamp": datetime.now(timezone.utc),
-            "level": level,
-            "message": message
-        }
-        token.setdefault("log", []).append(entry)
+        token.write_log(message, level, self.stage_name)
 
     def run_once(self):
-        token_path = self.input_pipe.get_token()
-        if not token_path:
-            return False
+        token = self.input_pipe.take_token()
 
-        with open(token_path, 'r') as f:
-            token = yaml.safe_load(f)
+        if not token:
+            return False
 
         try:
             self.process_token(token)
             self.log_to_token(token, "INFO", "Stage completed successfully")
-
-            updated_path = token_path.with_suffix('.tmp')
-            with open(updated_path, 'w') as f:
-                yaml.dump(token, f)
-
-            final_token_path = self.output_pipe.dir / token_path.name
-            updated_path.rename(final_token_path)
-            token_path.unlink()
-            logging.info("Processed token: %s", token_path.name)
+            self.output_pipe.put_token(token)
+            logging.info(f"Processed token: {token.name}")
             return True
-
         except Exception as e:
-            self.log_to_token(token, "ERROR", str(e))
-            logging.error("Error processing %s: %s", token_path.name, e)
+            self.log_to_token(token, "ERROR", f"in {self.stage_name}: {str(e)}")
+            logging.error(f"Error processing {token.name}: {str(e)}")
             return False
 
     def run_forever(self, poll_interval=5):
@@ -107,3 +96,5 @@ class Filter:
 
     def process_token(self, token):
         raise NotImplementedError("Subclasses must implement this")
+
+

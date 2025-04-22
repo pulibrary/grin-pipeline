@@ -12,5 +12,4 @@ class Mover(Filter):
         super().__init__(input_pipe, output_pipe)
 
     def process_token(self, token) -> None:
-        """ Do nothing; just move the token."""
-        pass
+        self.log_to_token(token, "INFO", "did nothing on purpose")
