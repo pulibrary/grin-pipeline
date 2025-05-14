@@ -1,15 +1,17 @@
 from pathlib import Path
 import json
 from pipeline.plumbing import Filter, InPipe, OutPipe
-from pipeline.filters.mover import Mover
+# from pipeline.filters.mover import Mover
 
-inpath = Path("/tmp/test_filter/in")
+inpath = Path("/tmp/test_pipeline_filter/in")
+outpath = Path("/tmp/test_pipeline_filter/out")
+
+
 inpath.mkdir(parents=True, exist_ok=True)
-outpath = Path("/tmp/test_filter/out")
 outpath.mkdir(parents=True, exist_ok=True)
 
 
-inpipe = InPipe(str(inpath))
+inpipe:InPipe = InPipe(str(inpath))
 outpipe: OutPipe = OutPipe(str(outpath))
 
 
@@ -20,10 +22,30 @@ expected_infile_after_run = inpath / Path("1234567.bak")
 token_info:dict = {
     "barcode" : "1234567"
 }
-with open(inpath / "1234567.json", 'w') as f:
+
+for f in [input_token_file, expected_outfile, expected_infile_after_run]:
+    if f.exists():
+        f.unlink()
+
+with open(input_token_file, 'w') as f:
     json.dump(token_info, f, indent=2)
     
-filter:Mover = Mover(inpipe, outpipe)
+# Use a test filter: DoNothing just logs
+# to the token.
+
+class DoNothing(Filter):
+    def __init__(self, input_pipe:InPipe, output_pipe:OutPipe) :
+        super().__init__(input_pipe, output_pipe)
+
+    def validate_token(self, token) -> bool:
+        return True
+
+    def process_token(self, token) -> bool:
+        self.log_to_token(token, "INFO", "did nothing on purpose")
+        return True
+
+
+filter:DoNothing = DoNothing(inpipe, outpipe)
 
 
 

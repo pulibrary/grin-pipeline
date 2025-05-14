@@ -7,15 +7,15 @@ import sys
 import time
 import logging
 from pathlib import Path
-from pipeline.plumbing import Pipe, Filter
+from pipeline.plumbing import InPipe, OutPipe, Filter, Token
 
 # logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 class Decryptor(Filter):
-    def process_token(self, token):
-        encrypted_path = Path(token['encrypted_path'])
+    def process_token(self, token:Token):
+        encrypted_path = Path(token.content['encrypted_path'])
         if not encrypted_path.exists():
             raise FileNotFoundError(f"Encrypted file not found: {encrypted_path}")
 
@@ -34,9 +34,9 @@ class Decryptor(Filter):
         if result.returncode != 0:
             raise RuntimeError(f"GPG decryption failed: {result.stderr.strip()}")
 
-        token['decryption_status'] = 'success'
-        token['decrypted_path'] = str(decrypted_path)
-        token['decrypted_size'] = decrypted_path.stat().st_size
+        token.content['decryption_status'] = 'success'
+        token.content['decrypted_path'] = str(decrypted_path)
+        token.content['decrypted_size'] = decrypted_path.stat().st_size
         self.log_to_token(token, "INFO", "Decryption successful")
 
 if __name__ == '__main__':
@@ -52,7 +52,7 @@ if __name__ == '__main__':
     parser.add_argument('--output', required=True)
     args = parser.parse_args()
 
-    input_pipe = Pipe(args.input)
-    output_pipe = Pipe(args.output)
+    input_pipe:InPipe = InPipe(args.input)
+    output_pipe:OutPipe = OutPipe(args.output)
     decryptor = Decryptor(input_pipe, output_pipe)
     decryptor.run_forever()

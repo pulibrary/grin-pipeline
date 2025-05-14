@@ -64,10 +64,10 @@ class OutPipe(Pipe):
 
 
 class Filter:
-    def __init__(self, input_pipe:Pipe, output_pipe:Pipe):
-        self.input_pipe = input_pipe
-        self.output_pipe = output_pipe
-        self.stage_name = self.__class__.__name__.lower()
+    def __init__(self, input_pipe:InPipe, output_pipe:OutPipe):
+        self.input_pipe:InPipe = input_pipe
+        self.output_pipe:OutPipe = output_pipe
+        self.stage_name:str = self.__class__.__name__.lower()
 
     def log_to_token(self, token, level, message):
         token.write_log(message, level, self.stage_name)
@@ -78,23 +78,36 @@ class Filter:
         if not token:
             return False
 
+        if self.validate_token(token) is False:
+            self.log_to_token(token, "ERROR",
+                              "Token did not validate")
+            return False
+
         try:
-            self.process_token(token)
-            self.log_to_token(token, "INFO", "Stage completed successfully")
-            self.output_pipe.put_token(token)
-            logging.info(f"Processed token: {token.name}")
-            return True
+            processed:bool = self.process_token(token)
+            if processed:
+                self.log_to_token(token, "INFO", "Stage completed successfully")
+                self.output_pipe.put_token(token)
+                logging.info(f"Processed token: {token.name}")
+                return True
+            else:
+                self.log_to_token(token, "WARNING", "Stage did not successfully")
         except Exception as e:
             self.log_to_token(token, "ERROR", f"in {self.stage_name}: {str(e)}")
             logging.error(f"Error processing {token.name}: {str(e)}")
             return False
+
+                
 
     def run_forever(self, poll_interval=5):
         while True:
             if not self.run_once():
                 time.sleep(poll_interval)
 
-    def process_token(self, token):
+    def process_token(self, token:Token):
+        raise NotImplementedError("Subclasses must implement this")
+
+    def validate_token(self, token:Token) -> bool:
         raise NotImplementedError("Subclasses must implement this")
 
 
