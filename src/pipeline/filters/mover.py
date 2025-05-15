@@ -7,18 +7,19 @@ import logging
 from pathlib import Path
 
 
-from pipeline.plumbing import InPipe, OutPipe, Filter
+from pipeline.plumbing import Pipe, Filter
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 class Mover(Filter):
-    def __init__(self, input_pipe:InPipe, output_pipe:OutPipe) :
-        super().__init__(input_pipe, output_pipe)
+    def __init__(self, pipe:Pipe) :
+        super().__init__(pipe)
 
     def validate_token(self, token) -> bool:
         status:bool = True
+
         if Path(token.content['source_file']).exists() is False:
             logging.error(f"source file does not exist: {token.content['source_file']}")
             self.log_to_token(token, "ERROR", f"source file does not exist: {token.content['source_file']}")
@@ -28,6 +29,7 @@ class Mover(Filter):
             logging.error(f"destination file already exists: {token.content['destination_file']}")
             self.log_to_token(token, "ERROR", "destination file already exists")
             status = False
+
         return status
     
 
@@ -60,9 +62,8 @@ if __name__ == '__main__':
     parser.add_argument('--output', required=True)
     args = parser.parse_args()
 
+    pipe:Pipe = Pipe(Path(args.input), Path(args.output))
 
-    input_pipe:InPipe = InPipe(args.input)
-    output_pipe:OutPipe = OutPipe(args.output)
-    mover:Mover = Mover(input_pipe, output_pipe)
+    mover:Mover = Mover(pipe)
     logger.info("starting mover")
     mover.run_forever()

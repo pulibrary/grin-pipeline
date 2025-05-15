@@ -1,29 +1,27 @@
 from pathlib import Path
 import json
-from pipeline.plumbing import Filter, InPipe, OutPipe
-# from pipeline.filters.mover import Mover
+from pipeline.plumbing import Filter, Pipe
+
 
 inpath = Path("/tmp/test_pipeline_filter/in")
-outpath = Path("/tmp/test_pipeline_filter/out")
-
-
 inpath.mkdir(parents=True, exist_ok=True)
+
+outpath = Path("/tmp/test_pipeline_filter/out")
 outpath.mkdir(parents=True, exist_ok=True)
 
 
-inpipe:InPipe = InPipe(str(inpath))
-outpipe: OutPipe = OutPipe(str(outpath))
+pipe = Pipe(inpath, outpath)
+
 
 
 input_token_file:Path = inpath / Path("1234567.json")
 expected_outfile:Path = outpath / Path("1234567.json")
-expected_infile_after_run = inpath / Path("1234567.bak")
 
 token_info:dict = {
     "barcode" : "1234567"
 }
 
-for f in [input_token_file, expected_outfile, expected_infile_after_run]:
+for f in [input_token_file, expected_outfile]:
     if f.exists():
         f.unlink()
 
@@ -34,8 +32,8 @@ with open(input_token_file, 'w') as f:
 # to the token.
 
 class DoNothing(Filter):
-    def __init__(self, input_pipe:InPipe, output_pipe:OutPipe) :
-        super().__init__(input_pipe, output_pipe)
+    def __init__(self, pipe:Pipe) -> None:
+        super().__init__(pipe)
 
     def validate_token(self, token) -> bool:
         return True
@@ -45,7 +43,7 @@ class DoNothing(Filter):
         return True
 
 
-filter:DoNothing = DoNothing(inpipe, outpipe)
+filter:DoNothing = DoNothing(pipe)
 
 
 
@@ -57,7 +55,6 @@ def test_filter():
     filter.run_once()
 
     assert(input_token_file.exists() is False)
-    assert(expected_infile_after_run.exists() is True)
     assert (expected_outfile.exists() is True)
     
     

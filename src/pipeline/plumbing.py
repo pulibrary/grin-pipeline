@@ -19,7 +19,8 @@ class Token:
     def __repr__(self) -> str:
         return f"Token({self.name})"
 
-    def write_log(self, message:str, level:Optional[str] = None,  stage:Optional[str] = None):
+    def write_log(self, message:str, level:Optional[str] = None,
+                  stage:Optional[str] = None):
         entry:dict = {"timestamp": str(datetime.now(timezone.utc)),
                       "message": message}
         if stage:
@@ -31,9 +32,9 @@ class Token:
 
 
 class Pipe:
-    def __init__(self, in_path:str, out_path:str) -> None:
-        self.input = Path(in_path)
-        self.output = Path(out_path)
+    def __init__(self, in_path:Path, out_path:Path) -> None:
+        self.input = in_path
+        self.output = out_path
         self.token: Token | None = None
 
     def __repr__(self) -> str:
@@ -65,7 +66,7 @@ class Pipe:
     @property
     def token_error_path(self) -> Path:
         if self.token:
-            return self.output / Path(self.token.name).with_suffix('.err')
+            return self.input / Path(self.token.name).with_suffix('.err')
         else:
             raise ValueError("pipe doesn't contain a token")
 
@@ -101,66 +102,31 @@ class Pipe:
 
 
 
-    def put_token(self) -> None:
+    def put_token(self, errorFlg:bool = False) -> None:
         if self.token:
-            with open(self.token_out_path, 'w') as f:
-                json.dump(self.token.content, f)
+            if errorFlg:
+                with open(self.token_error_path, 'w') as f:
+                    json.dump(self.token.content, f)
+            else:
+                with open(self.token_out_path, 'w') as f:
+                    json.dump(self.token.content, f)
+
             self.delete_marked_token()
             
             
                 
-                       
-
-
-class PipeOld:
-    def __init__(self, dir_path:str):
-        self.endpoint = Path(dir_path)
-
-    def __repr__(self) -> str:
-        return f"Pipe('{self.endpoint}')"
-
-
-class InPipe(PipeOld):
-    def take_token(self) -> Token | None:
-        try:
-            token_path:Path = next(self.endpoint.glob("*.json"))
-            token_name = token_path.name
-
-            with open(token_path, 'r') as f:
-                token = Token(json.load(f), token_name)
-
-            self.mark_token(token_path)
-            return token
-        
-        except StopIteration:
-            return None
-
-    def mark_token(self, token_path)-> Path:
-        backup_path:Path = token_path.with_suffix(".bak")
-        token_path.rename(backup_path)
-        return backup_path
-    
-
-class OutPipe(PipeOld):
-    def put_token(self, token:Token, errorflg:bool=False) -> None:
-        token_path = self.endpoint / token.name
-        if errorflg:
-            token_path:Path = token_path.with_suffix(".err")
-        with open(token_path, 'w') as f:
-            json.dump(token.content, f)
 
 
 class Filter:
-    def __init__(self, input_pipe:InPipe, output_pipe:OutPipe):
-        self.input_pipe:InPipe = input_pipe
-        self.output_pipe:OutPipe = output_pipe
+    def __init__(self, pipe:Pipe):
+        self.pipe = pipe
         self.stage_name:str = self.__class__.__name__.lower()
 
     def log_to_token(self, token, level, message):
         token.write_log(message, level, self.stage_name)
 
     def run_once(self) -> bool:
-        token:Token | None = self.input_pipe.take_token()
+        token:Token | None = self.pipe.take_token()
 
         if not token:
             logging.info("No tokens available")
@@ -170,7 +136,7 @@ class Filter:
             self.log_to_token(token, "ERROR",
                               "Token did not validate")
             logging.error("token did not validate")
-            self.output_pipe.put_token(token, errorflg=True)            
+            self.pipe.put_token(errorFlg=True)            
 
             return False
 
@@ -179,11 +145,11 @@ class Filter:
             if processed:
                 logging.info(f"Processed token: {token.name}")
                 self.log_to_token(token, "INFO", "Stage completed successfully")
-                self.output_pipe.put_token(token)
+                self.pipe.put_token()
             else:
                 logging.error(f"Did not proces token: {token.name}")
                 self.log_to_token(token, "WARNING", "Stage did not run successfully")
-                self.output_pipe.put_token(token, errorflg=True)            
+                self.pipe.put_token(errorFlg=True)            
 
             return True
 
@@ -191,10 +157,9 @@ class Filter:
         except Exception as e:
             self.log_to_token(token, "ERROR", f"in {self.stage_name}: {str(e)}")
             logging.error(f"Error processing {token.name}: {str(e)}")
-            self.output_pipe.put_token(token)
+            self.pipe.put_token(errorFlg = True)
             return False
 
-                
 
     def run_forever(self, poll_interval=5):
         while True:

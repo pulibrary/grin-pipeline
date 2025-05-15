@@ -1,6 +1,6 @@
 from pathlib import Path
 import json
-from pipeline.plumbing import Filter, InPipe, OutPipe
+from pipeline.plumbing import Pipe
 from pipeline.filters.mover import Mover
 
 # Set up the pipeline
@@ -11,10 +11,7 @@ pipe_out.mkdir(parents=True, exist_ok=True)
 
 input_token_file:Path = pipe_in / Path("234.json")
 
-
-inpipe:InPipe = InPipe(str(pipe_in))
-outpipe: OutPipe = OutPipe(str(pipe_out))
-
+pipe = Pipe(pipe_in, pipe_out)
 
 # Set up the mock data filesystem
 source: Path = Path("/tmp/test_data/source")
@@ -23,8 +20,6 @@ destination: Path = Path("/tmp/test_data/destination")
 destination.mkdir(parents=True, exist_ok=True)
 
 test_file = Path("test_file.txt")
-
-
 
 source_file:Path = source / test_file
 destination_file:Path = destination / test_file
@@ -48,7 +43,7 @@ with open(source_file, mode='w') as f:
     f.write("This is test data.")
 
 # finally create the filter
-filter:Mover = Mover(inpipe, outpipe)
+filter:Mover = Mover(pipe)
 
 
 
