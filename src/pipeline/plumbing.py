@@ -112,6 +112,7 @@ class Pipe:
                     json.dump(self.token.content, f)
 
             self.delete_marked_token()
+            self.token = None
             
             
                 
@@ -129,7 +130,7 @@ class Filter:
         token:Token | None = self.pipe.take_token()
 
         if not token:
-            logging.info("No tokens available")
+            # logging.info("No tokens available")
             return False
 
         if self.validate_token(token) is False:

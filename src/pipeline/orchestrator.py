@@ -11,7 +11,7 @@ from pathlib import Path
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 
 class Orchestrator:
-    def __init__(self, config_path: str):
+    def __init__(self, config_path: str) -> None:
         self.config_path = config_path
         self.processes = []
         self.config = {}
@@ -22,8 +22,8 @@ class Orchestrator:
             self.config = yaml.safe_load(f)
         logging.info("Configuration loaded successfully.")
 
-
-    def load_encrypted_config(self):
+    # Not using this yet.
+    def load_encrypted_config(self) -> None:
         """Decrypt and load the GPG-encrypted YAML config file."""
         decrypted_config = tempfile.NamedTemporaryFile(delete=False)
         decrypted_config.close()
@@ -48,6 +48,7 @@ class Orchestrator:
         os.unlink(decrypted_config.name)
         logging.info("Configuration loaded successfully.")
 
+        
     def start_filters(self):
         for filt in self.config.get('filters', []):
             self.start_filter(filt)
@@ -137,11 +138,12 @@ class Orchestrator:
         self.repl()
 
 if __name__ == '__main__':
-    if 'GPG_PASSPHRASE' not in os.environ:
-        print("Please set the GPG_PASSPHRASE environment variable.")
-        sys.exit(1)
+    # if 'GPG_PASSPHRASE' not in os.environ:
+    #     print("Please set the GPG_PASSPHRASE environment variable.")
+    #     sys.exit(1)
 
     # config_file = 'config.yml.gpg'
     config_file = 'config.yml'
+
     orchestrator = Orchestrator(config_file)
     orchestrator.run()
