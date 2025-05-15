@@ -4,9 +4,7 @@ import yaml
 import tempfile
 import signal
 import sys
-import time
 import logging
-from pathlib import Path
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 

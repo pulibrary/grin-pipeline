@@ -7,7 +7,7 @@ import sys
 import time
 import logging
 from pathlib import Path
-from pipeline.plumbing import InPipe, OutPipe, Filter, Token
+from pipeline.plumbing import Pipe, Filter, Token
 
 # logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 
@@ -52,7 +52,6 @@ if __name__ == '__main__':
     parser.add_argument('--output', required=True)
     args = parser.parse_args()
 
-    input_pipe:InPipe = InPipe(args.input)
-    output_pipe:OutPipe = OutPipe(args.output)
-    decryptor = Decryptor(input_pipe, output_pipe)
+    pipe:Pipe = Pipe(args.input, args.output)
+    decryptor = Decryptor(pipe)
     decryptor.run_forever()
