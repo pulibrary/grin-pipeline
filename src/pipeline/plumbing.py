@@ -77,9 +77,9 @@ class Pipe:
         try:
             token_path = next(self.input.glob("*.json"))
 
-
             with open(token_path, 'r') as f:
-                self.token = Token(json.load(f), token_path.name)
+                content:dict = json.load(f)
+                self.token = Token(content=content, name=token_path.stem)
 
             self.mark_token()
             return self.token
