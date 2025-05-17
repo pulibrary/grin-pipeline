@@ -40,3 +40,37 @@ filters:
     input_pipe: pipeline/01_incoming
     output_pipe: pipeline/02_decrypted
 ```
+
+## A Workflow Walkthrough ##
+User launches the orchestrator, perhaps with a config file passed in, or the config file is at an understood location. The configuration includes the location of an all_books file, which is expensive to generate.
+
+If there are no tokens in the to_dowload bucket, the Orchestrator seeds the pipeline, generating some new tokens (a sample can be passed in on the command line).
+
+What is available but not converted?
+
+Our first pipeline will download and decode all the books that have been converted.
+
+
+## Anatomy of a Token
+  * barcode
+  * processing_bucket
+  * storage_bucket
+  
+  e.g,
+  ```json
+  {
+	  "barcode" : "12345",
+	  "processing_bucket" : "/var/tmp/processing"
+	  "done_bucket" : "/var/tmp/done"
+  }
+  ```
+
+
+
+## Filesystem Setup ##
+As above, there must be a pipeline directory for managing the kanban flow.
+
+The data files must go somewhere; the Orchestrator specifies locations when it
+creates tokens?
+
+

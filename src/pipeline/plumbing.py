@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 from datetime import datetime, time, timezone
-import time
+from time import sleep
 import logging
 from typing import Optional
 
@@ -77,9 +77,9 @@ class Pipe:
         try:
             token_path = next(self.input.glob("*.json"))
 
-
             with open(token_path, 'r') as f:
-                self.token = Token(json.load(f), token_path.name)
+                content:dict = json.load(f)
+                self.token = Token(content=content, name=token_path.stem)
 
             self.mark_token()
             return self.token
@@ -98,7 +98,6 @@ class Pipe:
             self.token_marked_path.unlink()
 
 
-
     def put_token(self, errorFlg:bool = False) -> None:
         if self.token:
             if errorFlg:
@@ -110,7 +109,6 @@ class Pipe:
 
             self.delete_marked_token()
             self.token = None
-            
             
                 
 
@@ -141,7 +139,7 @@ class Filter:
         try:
             processed:bool = self.process_token(token)
             if processed:
-                logging.info(f"Processed token: {token.name}")
+                logging.debug(f"Processed token: {token.name}")
                 self.log_to_token(token, "INFO", "Stage completed successfully")
                 self.pipe.put_token()
             else:
@@ -162,7 +160,7 @@ class Filter:
     def run_forever(self, poll_interval=5):
         while True:
             if not self.run_once():
-                time.sleep(poll_interval)
+                sleep(poll_interval)
 
     def process_token(self, token:Token):
         raise NotImplementedError("Subclasses must implement this")

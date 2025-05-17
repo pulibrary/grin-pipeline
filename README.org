@@ -1,0 +1,118 @@
+* GRIN Pipeline
+:PROPERTIES:
+:CUSTOM_ID: grin-pipeline
+:END:
+** Kanban-Style Workflow
+:PROPERTIES:
+:CUSTOM_ID: kanban-style-workflow
+:END:
+The design implements a Kanban-style workflow, where stages are
+asynchronous processes that communicate with other processes via tokens
+moved along a sequence of directories (buckets). This is a common
+pattern for implementing resilient, loosely coupled pipelines, and it
+offers several advantages:
+
+- It is asynchronous. Each stage runs independently, improving fault
+  isolation
+- It is observable. You can monitor the state of the pipeline just by
+  looking at the directories.
+- It is restartable. Crashed stages can resume simply by rechecking
+  their input directories.
+- It is extensible. It is easy to add more stages or logic by inserting
+  new directories and processors.
+
+** Architecture
+:PROPERTIES:
+:CUSTOM_ID: architecture
+:END:
+The GRIN retrieval pipeline is implemented as series of buckets:
+
+- pipeline
+  - available :: tokens for barcodes available to process
+  - requested :: tokens for barcodes that have been requested
+  - converted :: tokens for for barcodes available to download
+  - downloaded :: 
+  - decrypted ::
+  - extracted ::
+  - processed ::
+  - stored ::
+
+Processors monitor the buckets and take action when they see tickets:
+
+- processors
+  - requestor :: monitors the available bucket posts a message to GRIN
+    asking that a volume be converted into a form that can be
+    downloaded. Moves token into requested.
+  - downloader :: monitors the requested bucket and GRIN's list of
+    converted files.  When a requeste
+
+
+
+#+begin_example
+pipeline/
+├── 01_incoming/         # encrypted tarballs (downloaded)
+├── 02_decrypted/        # decrypted tarballs
+├── 03_extracted/        # extracted files
+├── 04_modified/         # modified tarballs
+├── 05_uploaded/         # post-upload, archiving or success marker
+├── logs/                # optional: logs per stage
+#+end_example
+
+Each process * watches its input_dir for new tokens (files) * does its
+work * moves the token to the next directory
+
+An Orchestrator controls the set-up and tear-down of the pipeline. It
+reads a configuration file, prepares the buckets, and starts the
+processes.
+
+Here is a part of an example config.yaml file:
+
+#+begin_src yaml
+global:
+  temp_dir: /tmp/pipeline
+  gpg_passphrase: "s3cr3t"
+
+filters:
+  - name: decryptor
+    class: Decryptor
+    input_pipe: pipeline/01_incoming
+    output_pipe: pipeline/02_decrypted
+#+end_src
+
+** A Workflow Walkthrough
+:PROPERTIES:
+:CUSTOM_ID: a-workflow-walkthrough
+:END:
+User launches the orchestrator, perhaps with a config file passed in, or
+the config file is at an understood location. The configuration includes
+the location of an all_books file, which is expensive to generate.
+
+If there are no tokens in the to_dowload bucket, the Orchestrator seeds
+the pipeline, generating some new tokens (a sample can be passed in on
+the command line).
+
+What is available but not converted?
+
+Our first pipeline will download and decode all the books that have been
+converted.
+
+** Anatomy of a Token
+:PROPERTIES:
+:CUSTOM_ID: anatomy-of-a-token
+:END:
+- barcode
+- processing_bucket
+- storage_bucket
+
+e.g,
+  {"barcode" : "12345", "processing_bucket" : "/var/tmp/processing", "done_bucket" : "/var/tmp/done"   }
+
+** Filesystem Setup
+:PROPERTIES:
+:CUSTOM_ID: filesystem-setup
+:END:
+As above, there must be a pipeline directory for managing the kanban
+flow.
+
+The data files must go somewhere; the Orchestrator specifies locations
+when it creates tokens?

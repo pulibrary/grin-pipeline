@@ -23,6 +23,10 @@ data/
 .DS_Store
 Thumbs.db
 
+# secrets
+.secrets
+.creds
+
 # GPG-encrypted config
 config.yml.gpg
 
