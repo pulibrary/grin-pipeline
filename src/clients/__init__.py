@@ -1,1 +1,1 @@
-from .grin_client import GrinClient
+from .grin_client import GrinClient as GrinClient

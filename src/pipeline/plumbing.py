@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from datetime import datetime, time, timezone
+from datetime import datetime, timezone
 from time import sleep
 import logging
 from typing import Optional
