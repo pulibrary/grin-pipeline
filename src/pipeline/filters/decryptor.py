@@ -1,10 +1,6 @@
 import os
 import subprocess
-import yaml
-import tempfile
-import signal
 import sys
-import time
 import logging
 from pathlib import Path
 from pipeline.plumbing import Pipe, Filter, Token
@@ -18,17 +14,21 @@ class Decryptor(Filter):
             raise RuntimeError("DECRYPTION_PASSPHRASE not set in environment")
         super().__init__(pipe)
         self.passphrase = passphrase
+
+    
         
     def infile(self, token) -> Path:
-        input_path = Path(token.content['buckets']['downloaded'])
+        input_path = Path(token.content['processing_bucket'])
         input_filename: Path = Path(token.content['barcode']).with_suffix(".tar.gz.gpg")
         return input_path / input_filename
 
     def outfile(self, token) -> Path:
-        output_path: Path = Path(token.content['buckets']['decrypted'])
+        output_path: Path = Path(token.content['processing_bucket'])
         output_filename: Path = Path(token.content['barcode']).with_suffix(".tgz")
         return output_path / output_filename
         
+
+
     def validate_token(self, token) -> bool:
         status:bool = True
         
@@ -100,11 +100,14 @@ if __name__ == '__main__':
     # from sys import argv
     import argparse
 
+
+
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--token_input', required=True)
     parser.add_argument('--token_output', required=True)
     args = parser.parse_args()
 
-    pipe:Pipe = Pipe(Path(args.token_input), Path(args.token_output))
+    pipe:Pipe = Pipe(Path(args.input), Path(args.output))
     decryptor = Decryptor(pipe)
     decryptor.run_forever()

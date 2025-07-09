@@ -2,8 +2,6 @@ import os
 import yaml
 import subprocess
 import tempfile
-import logging
-
 
 def load_config(path: str) -> dict:
     """

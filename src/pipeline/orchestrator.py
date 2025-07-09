@@ -247,7 +247,8 @@ if __name__ == '__main__':
     #     sys.exit(1)
 
     # config_file = 'config.yml.gpg'
-    config_file = 'config.yml'
+    # config_file = 'config.yml'
 
-    orchestrator = Orchestrator(config_file)
+    # orchestrator = Orchestrator(config_file)
+    orchestrator = Orchestrator()
     orchestrator.run()
