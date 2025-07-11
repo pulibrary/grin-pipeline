@@ -104,8 +104,8 @@ if __name__ == '__main__':
 
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--token_input', required=True)
-    parser.add_argument('--token_output', required=True)
+    parser.add_argument('--input', required=True)
+    parser.add_argument('--output', required=True)
     args = parser.parse_args()
 
     pipe:Pipe = Pipe(Path(args.input), Path(args.output))
