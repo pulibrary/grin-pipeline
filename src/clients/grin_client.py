@@ -121,8 +121,8 @@ def rate_limiter(max_calls, period):
     return decorator
 
 
-
-
+def table_to_dictlist(table, fields) -> list:
+  return [dict(zip(fields, row)) for row in table]
 
 
 class GrinClient:
@@ -136,6 +136,8 @@ class GrinClient:
     self._in_process = None
     self._failed = None
       
+
+
   @property
   def auth_header(self):
     return {"Authorization" : f"Bearer {self.creds.access_token}"}
@@ -158,26 +160,96 @@ class GrinClient:
     return f"{self.base_url}/{self.directory}/{resource_str}"
 
 
-  def blank_books(self, book_type):
-    cache_prop = f"_{book_type}"
-    if getattr(self, cache_prop) is  None:
+
+  def grin_data(self, book_type) -> list:
       url = self.resource_url(f'_{book_type}?format=text&mode=all')
       response = self.make_grin_request(url)
       tsv_data = io.StringIO(response.text)
       reader = csv.reader(tsv_data, delimiter='\t')
-      barcodes = []
+      table = []
       for row in reader:
-        barcodes.append(row[0])
-      setattr(self, cache_prop, barcodes)
-    return getattr(self, cache_prop)
+        table.append(row)
+      return table
+
+  
+
+
+  @property
+  def failed_books(self):
+    fields: list = ['barcode', 'scanned_date',
+    'processed_date', 'analyzed_date',
+    'convert_failed_date', 'convert_failed_info',
+    'ocrd_date', 'detailed_conversion_info', 'link']
+    data = self.grin_data('failed')
+    return table_to_dictlist(data, fields)
+
+
+  @property
+  def available_books(self):
+    fields: list = ['barcode', 'scanned_date', 'processed_date', 'analyzed_date', 'ocrd_date', 'link']
+    data = self.grin_data('available')
+    return table_to_dictlist(data, fields)    
+
+  @property
+  def in_process_books(self):
+    fields: list = ['barcode', 'scanned_date', 'processed_date', 'analyzed_date', 'ocrd_date', 'link']
+    data = self.grin_data('in_process')
+    return table_to_dictlist(data, fields)
+
+  @property
+  def all_books(self):
+    fields: list = ['barcode', 'scanned_date', 'processed_date', 'analyzed_date', 'converted_date', 'ocrd_date', 'link' ]
+    data =  self.grin_data('all_books')
+    return table_to_dictlist(data, fields)
+    
+  @property
+  def converted_books(self) -> list | None:
+    """ the GRIN for converted_books returns
+    a different format from the other apis;
+    the barcode needs to be extracted from the first field."""
+    fields =   ['file', 'scanned_date', 'converted_date', 'downloaded_date', 'link']
+    data =  self.grin_data('converted')
+    dictlist = []
+    for row in data:
+      barcode = row[0].split('.')[0]
+      row_dict = dict(zip(fields, row))
+      row_dict['barcode'] = barcode
+      dictlist.append(row_dict)
+    return dictlist
+
+  
+  def convert_book(self, barcode:str):
+    url = f"{self.resource_url('_process')}?barcodes={barcode}"
+    response = httpx.post(url=url,
+                          headers=self.auth_header,
+                          follow_redirects=True)
+    return response
+
+  def convert_books(self, barcode_list):
+    responses = {}
+    for barcode in barcode_list:
+      url = f"{self.resource_url('_process')}?barcodes={barcode}"
+      response = httpx.post(url=url,
+                            headers=self.auth_header,
+                            follow_redirects=True)
+      
+      with io.StringIO(response.text) as f:
+        reader = csv.DictReader(f, delimiter='\t')
+        for row in reader:
+          responses[row['Barcode']] = row['Status']
+
+    return responses
+      
 
     
   def convert(self, barcode_list:list):
-    url = self.resource_url("_process")
+    url = f"{self.resource_url('_process')}?process_format=json"
     data = {
-      'barcodes': '\n'.join(barcode_list)
+     #  'barcodes': '\n'.join(barcode_list)
+      'barcodes': barcode_list
       }
-    response = httpx.post(f"{url}?process_format=json",
+    breakpoint()
+    response = httpx.post(url=url,
                           headers=self.auth_header,
                           follow_redirects=True,
                           data=data)
@@ -190,16 +262,6 @@ class GrinClient:
 
     return response_dict
     
-
-  def convert_unfinished(self, barcodes_list:list):
-    # create a string of barcodes to request
-    resource_string = "_process"
-    barcodes = iter(barcodes_list)
-    resource_string += f"?barcodes={next(barcodes)}"
-    for barcode in barcodes:
-      resource_string += f"&barcodes={barcode}"
-    return resource_string
-
 
   def download_file(self, url, outpath):
     with httpx.stream("GET", url, headers=self.auth_header,
@@ -215,26 +277,4 @@ class GrinClient:
     src_url = self.resource_url(fname)
     outpath = f"{target_dir}/{fname}"
     self.download_file(src_url, outpath)
-
-
-
-  @property
-  def failed_books(self):
-    return self.blank_books('failed')
-
-  @property
-  def available_books(self):
-    return self.blank_books('available')
-
-  @property
-  def in_process_books(self):
-    return self.blank_books('in_process')
-
-  @property
-  def all_books(self):
-    return self.blank_books('all_books')
-
-  @property
-  def converted_books(self):
-    return self.blank_books('converted')
 
