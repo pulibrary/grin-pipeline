@@ -15,31 +15,32 @@ log_level = getattr(logging, config.get("global", {}).get("log_level", "INFO").u
 
 logging.basicConfig(level=log_level)
 
+
 class Orchestrator:
     def __init__(self) -> None:
         self.processes = []
-        
+
     def start_filters(self):
-        for filt in config.get('filters', []):
+        for filt in config.get("filters", []):
             self.start_filter(filt)
 
     def start_filter(self, filt):
         extra_env = {}
         cmd = [
             sys.executable,
-            filt['script'],
-            '--input', filt['input_pipe'],
-            '--output', filt['output_pipe']
+            filt["script"],
+            "--input",
+            filt["input_pipe"],
+            "--output",
+            filt["output_pipe"],
         ]
 
-        if 'decryption_passphrase' in filt:
-           extra_env["DECRYPTION_PASSPHRASE"] = filt['decryption_passphrase'] 
+        if "decryption_passphrase" in filt:
+            extra_env["DECRYPTION_PASSPHRASE"] = filt["decryption_passphrase"]
 
-        logging.info("Starting filter: %s", ' '.join(cmd))
-        proc = subprocess.Popen(cmd,
-                                env={**os.environ, **extra_env}
-                                )
-        self.processes.append((filt['name'], proc))
+        logging.info("Starting filter: %s", " ".join(cmd))
+        proc = subprocess.Popen(cmd, env={**os.environ, **extra_env})
+        self.processes.append((filt["name"], proc))
 
     def stop_filters(self):
         for name, proc in self.processes:
@@ -61,8 +62,8 @@ class Orchestrator:
         load_config(config_path)
 
     def add_filter(self, filt):
-        logging.info("Adding new filter: %s", filt['name'])
-        config['filters'].append(filt)
+        logging.info("Adding new filter: %s", filt["name"])
+        config["filters"].append(filt)
         self.start_filter(filt)
 
     def repl(self):
@@ -70,31 +71,33 @@ class Orchestrator:
         while True:
             try:
                 cmd = input("orchestrator> ").strip()
-                if cmd == 'exit':
+                if cmd == "exit":
                     print("Exiting orchestrator.")
                     self.stop_filters()
                     break
-                elif cmd == 'status':
+                elif cmd == "status":
                     self.status()
-                elif cmd == 'stop':
+                elif cmd == "stop":
                     self.stop_filters()
-                elif cmd == 'start':
+                elif cmd == "start":
                     self.start_filters()
-                elif cmd == 'restart':
+                elif cmd == "restart":
                     self.stop_filters()
                     self.start_filters()
-                elif cmd == 'reload':
+                elif cmd == "reload":
                     self.stop_filters()
                     self.reload_config()
                     self.start_filters()
-                elif cmd.startswith('add '):
+                elif cmd.startswith("add "):
                     try:
                         new_filter = yaml.safe_load(cmd[4:])
                         self.add_filter(new_filter)
                     except Exception as e:
                         logging.error("Failed to parse new filter: %s", e)
-                elif cmd == 'help':
-                    print("Available commands: status, start, stop, restart, reload, add <yaml>, exit, help")
+                elif cmd == "help":
+                    print(
+                        "Available commands: status, start, stop, restart, reload, add <yaml>, exit, help"
+                    )
                 else:
                     print(f"Unknown command: {cmd}")
             except (KeyboardInterrupt, EOFError):
@@ -114,6 +117,7 @@ class Orchestrator:
         self.start_filters()
         self.repl()
 
+
 class Orchestrator_old:
     def __init__(self, config_path: str) -> None:
         self.config_path = os.environ.get("PIPELINE_CONFIG", "config.yml")
@@ -122,7 +126,7 @@ class Orchestrator_old:
         self.load_config()
 
     def load_config(self) -> None:
-        with open(self.config_path, 'r') as f:
+        with open(self.config_path, "r") as f:
             self.config = yaml.safe_load(f)
         logging.info("Configuration loaded successfully.")
 
@@ -132,41 +136,48 @@ class Orchestrator_old:
         decrypted_config = tempfile.NamedTemporaryFile(delete=False)
         decrypted_config.close()
 
-        result = subprocess.run([
-            'gpg',
-            '--batch',
-            '--yes',
-            '--passphrase', os.environ['GPG_PASSPHRASE'],
-            '--decrypt',
-            '--output', decrypted_config.name,
-            self.config_path
-        ], capture_output=True, text=True)
+        result = subprocess.run(
+            [
+                "gpg",
+                "--batch",
+                "--yes",
+                "--passphrase",
+                os.environ["GPG_PASSPHRASE"],
+                "--decrypt",
+                "--output",
+                decrypted_config.name,
+                self.config_path,
+            ],
+            capture_output=True,
+            text=True,
+        )
 
         if result.returncode != 0:
             logging.error("Failed to decrypt config: %s", result.stderr.strip())
             sys.exit(1)
 
-        with open(decrypted_config.name, 'r') as f:
+        with open(decrypted_config.name, "r") as f:
             self.config = yaml.safe_load(f)
 
         os.unlink(decrypted_config.name)
         logging.info("Configuration loaded successfully.")
 
-        
     def start_filters(self):
-        for filt in self.config.get('filters', []):
+        for filt in self.config.get("filters", []):
             self.start_filter(filt)
 
     def start_filter(self, filt):
         cmd = [
             sys.executable,
-            filt['script'],
-            '--input', filt['input_pipe'],
-            '--output', filt['output_pipe']
+            filt["script"],
+            "--input",
+            filt["input_pipe"],
+            "--output",
+            filt["output_pipe"],
         ]
-        logging.info("Starting filter: %s", ' '.join(cmd))
+        logging.info("Starting filter: %s", " ".join(cmd))
         proc = subprocess.Popen(cmd)
-        self.processes.append((filt['name'], proc))
+        self.processes.append((filt["name"], proc))
 
     def stop_filters(self):
         for name, proc in self.processes:
@@ -188,8 +199,8 @@ class Orchestrator_old:
         self.load_config()
 
     def add_filter(self, filt):
-        logging.info("Adding new filter: %s", filt['name'])
-        self.config['filters'].append(filt)
+        logging.info("Adding new filter: %s", filt["name"])
+        self.config["filters"].append(filt)
         self.start_filter(filt)
 
     def repl(self):
@@ -197,31 +208,33 @@ class Orchestrator_old:
         while True:
             try:
                 cmd = input("orchestrator> ").strip()
-                if cmd == 'exit':
+                if cmd == "exit":
                     print("Exiting orchestrator.")
                     self.stop_filters()
                     break
-                elif cmd == 'status':
+                elif cmd == "status":
                     self.status()
-                elif cmd == 'stop':
+                elif cmd == "stop":
                     self.stop_filters()
-                elif cmd == 'start':
+                elif cmd == "start":
                     self.start_filters()
-                elif cmd == 'restart':
+                elif cmd == "restart":
                     self.stop_filters()
                     self.start_filters()
-                elif cmd == 'reload':
+                elif cmd == "reload":
                     self.stop_filters()
                     self.reload_config()
                     self.start_filters()
-                elif cmd.startswith('add '):
+                elif cmd.startswith("add "):
                     try:
                         new_filter = yaml.safe_load(cmd[4:])
                         self.add_filter(new_filter)
                     except Exception as e:
                         logging.error("Failed to parse new filter: %s", e)
-                elif cmd == 'help':
-                    print("Available commands: status, start, stop, restart, reload, add <yaml>, exit, help")
+                elif cmd == "help":
+                    print(
+                        "Available commands: status, start, stop, restart, reload, add <yaml>, exit, help"
+                    )
                 else:
                     print(f"Unknown command: {cmd}")
             except (KeyboardInterrupt, EOFError):
@@ -240,8 +253,9 @@ class Orchestrator_old:
 
         self.start_filters()
         self.repl()
-        
-if __name__ == '__main__':
+
+
+if __name__ == "__main__":
     # if 'GPG_PASSPHRASE' not in os.environ:
     #     print("Please set the GPG_PASSPHRASE environment variable.")
     #     sys.exit(1)

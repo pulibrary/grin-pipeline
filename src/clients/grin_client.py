@@ -1,4 +1,4 @@
-# client.py 
+# client.py
 
 # This module implements a GrinClient class that can be used
 # to access the Google Books library portal.  It borrows code
@@ -24,13 +24,15 @@ from oauth2client.tools import run_flow
 # powers granted to the thing you give the token to. In this case, you're asking
 # for a token that will give GRIN the permission to see your email address and
 # profile information.
-SCOPES = ['https://www.googleapis.com/auth/userinfo.email',
-          'https://www.googleapis.com/auth/userinfo.profile']
+SCOPES = [
+    "https://www.googleapis.com/auth/userinfo.email",
+    "https://www.googleapis.com/auth/userinfo.profile",
+]
 
 # This is the file you downloaded from console.developers.google.com when you
 # created your 'project'. You need this to generate credentials. Once you've
 # generated the credentials, you could delete this file.
-SECRETS_FILE = '.secrets'
+SECRETS_FILE = ".secrets"
 
 # This file contains the authorization token ('access_token') shared with GRIN,
 # and the refresh token ('refresh_token') used to issue access tokens when your
@@ -38,25 +40,25 @@ SECRETS_FILE = '.secrets'
 # CREDENTIALS_FILE = '.creds'
 
 # for development only; remove
-cfile = '/Users/wulfmanc/gh/pulibrary/pugrin/.creds'
-sfile = '/Users/wulfmanc/gh/pulibrary/pugrin/.secrets'
+cfile = "/Users/wulfmanc/gh/pulibrary/pugrin/.creds"
+sfile = "/Users/wulfmanc/gh/pulibrary/pugrin/.secrets"
 
-CREDENTIALS_FILE = '/Users/wulfmanc/repos/pulibrary/pugrin/.creds'
+CREDENTIALS_FILE = "/Users/wulfmanc/repos/pulibrary/pugrin/.creds"
 
 # How much we read/write when streaming response data.
 OUTPUT_BLOCKSIZE = 1024 * 1024
 
 
 class CredsMissingError(IOError):
-  """Raised by CredentialsFactory() when credentials are missing."""
+    """Raised by CredentialsFactory() when credentials are missing."""
 
 
 class GRINPermissionDeniedError(IOError):
-  """GRIN says you're not allowed."""
+    """GRIN says you're not allowed."""
 
 
 class GoogleLoginError(IOError):
-  """Something failed logging in to Google."""
+    """Something failed logging in to Google."""
 
 
 def credentials_factory(credentials_file):
@@ -81,8 +83,9 @@ def get_creds(credentials_file, secrets_file):
     return creds
 
 
-  # This is a wrapper/decorator to limit the rate of calls made to the
+# This is a wrapper/decorator to limit the rate of calls made to the
 # GRIN API.  Can be used more generally.
+
 
 def rate_limiter(max_calls, period):
     """
@@ -91,6 +94,7 @@ def rate_limiter(max_calls, period):
     :param max_calls: Maximum number of calls allowed in the period.
     :param period: Period in seconds over which max_calls are allowed.
     """
+
     def decorator(func):
         call_times = []
         lock = threading.Lock()
@@ -122,159 +126,171 @@ def rate_limiter(max_calls, period):
 
 
 def table_to_dictlist(table, fields) -> list:
-  return [dict(zip(fields, row)) for row in table]
+    return [dict(zip(fields, row)) for row in table]
 
 
 class GrinClient:
-  def __init__(self, directory:str="PRNC") -> None:
-    self.base_url = "https://books.google.com/libraries"
-    self.directory = directory
-    self.creds = get_creds(cfile, sfile)
-    self._converted = None
-    self._all_books = None
-    self._available = None
-    self._in_process = None
-    self._failed = None
-      
+    def __init__(self, directory: str = "PRNC") -> None:
+        self.base_url = "https://books.google.com/libraries"
+        self.directory = directory
+        self.creds = get_creds(cfile, sfile)
+        self._converted = None
+        self._all_books = None
+        self._available = None
+        self._in_process = None
+        self._failed = None
 
+    @property
+    def auth_header(self):
+        return {"Authorization": f"Bearer {self.creds.access_token}"}
 
-  @property
-  def auth_header(self):
-    return {"Authorization" : f"Bearer {self.creds.access_token}"}
+    @rate_limiter(max_calls=30, period=60)
+    def make_grin_request(self, url, method="GET", data=None):
+        """Makes an HTTP request to grin using httpx
+        and returns the response."""
+        if method == "GET":
+            response = httpx.get(url, headers=self.auth_header)
+        elif method == "POST":
+            response = httpx.post(url, headers=self.auth_header)
+        else:
+            raise ValueError(f"{method} method not supported by make_grin_request")
 
+        return response
 
-  @rate_limiter(max_calls=30, period=60)
-  def make_grin_request(self, url, method="GET", data=None):
-    """Makes an HTTP request to grin using httpx
-    and returns the response."""
-    if method == "GET":
-      response = httpx.get(url, headers=self.auth_header)
-    elif method == "POST":
-      response = httpx.post(url, headers=self.auth_header)
-    else:
-      raise ValueError(f"{method} method not supported by make_grin_request")
-    
-    return response
+    def resource_url(self, resource_str):
+        return f"{self.base_url}/{self.directory}/{resource_str}"
 
-  def resource_url(self, resource_str):
-    return f"{self.base_url}/{self.directory}/{resource_str}"
-
-
-
-  def grin_data(self, book_type) -> list:
-      url = self.resource_url(f'_{book_type}?format=text&mode=all')
-      response = self.make_grin_request(url)
-      tsv_data = io.StringIO(response.text)
-      reader = csv.reader(tsv_data, delimiter='\t')
-      table = []
-      for row in reader:
-        table.append(row)
-      return table
-
-  
-
-
-  @property
-  def failed_books(self):
-    fields: list = ['barcode', 'scanned_date',
-    'processed_date', 'analyzed_date',
-    'convert_failed_date', 'convert_failed_info',
-    'ocrd_date', 'detailed_conversion_info', 'link']
-    data = self.grin_data('failed')
-    return table_to_dictlist(data, fields)
-
-
-  @property
-  def available_books(self):
-    fields: list = ['barcode', 'scanned_date', 'processed_date', 'analyzed_date', 'ocrd_date', 'link']
-    data = self.grin_data('available')
-    return table_to_dictlist(data, fields)    
-
-  @property
-  def in_process_books(self):
-    fields: list = ['barcode', 'scanned_date', 'processed_date', 'analyzed_date', 'ocrd_date', 'link']
-    data = self.grin_data('in_process')
-    return table_to_dictlist(data, fields)
-
-  @property
-  def all_books(self):
-    fields: list = ['barcode', 'scanned_date', 'processed_date', 'analyzed_date', 'converted_date', 'ocrd_date', 'link' ]
-    data =  self.grin_data('all_books')
-    return table_to_dictlist(data, fields)
-    
-  @property
-  def converted_books(self) -> list | None:
-    """ the GRIN for converted_books returns
-    a different format from the other apis;
-    the barcode needs to be extracted from the first field."""
-    fields =   ['file', 'scanned_date', 'converted_date', 'downloaded_date', 'link']
-    data =  self.grin_data('converted')
-    dictlist = []
-    for row in data:
-      barcode = row[0].split('.')[0]
-      row_dict = dict(zip(fields, row))
-      row_dict['barcode'] = barcode
-      dictlist.append(row_dict)
-    return dictlist
-
-  
-  def convert_book(self, barcode:str):
-    url = f"{self.resource_url('_process')}?barcodes={barcode}"
-    response = httpx.post(url=url,
-                          headers=self.auth_header,
-                          follow_redirects=True)
-    return response
-
-  def convert_books(self, barcode_list):
-    responses = {}
-    for barcode in barcode_list:
-      url = f"{self.resource_url('_process')}?barcodes={barcode}"
-      response = httpx.post(url=url,
-                            headers=self.auth_header,
-                            follow_redirects=True)
-      
-      with io.StringIO(response.text) as f:
-        reader = csv.DictReader(f, delimiter='\t')
+    def grin_data(self, book_type) -> list:
+        url = self.resource_url(f"_{book_type}?format=text&mode=all")
+        response = self.make_grin_request(url)
+        tsv_data = io.StringIO(response.text)
+        reader = csv.reader(tsv_data, delimiter="\t")
+        table = []
         for row in reader:
-          responses[row['Barcode']] = row['Status']
+            table.append(row)
+        return table
 
-    return responses
-      
+    @property
+    def failed_books(self):
+        fields: list = [
+            "barcode",
+            "scanned_date",
+            "processed_date",
+            "analyzed_date",
+            "convert_failed_date",
+            "convert_failed_info",
+            "ocrd_date",
+            "detailed_conversion_info",
+            "link",
+        ]
+        data = self.grin_data("failed")
+        return table_to_dictlist(data, fields)
 
-    
-  def convert(self, barcode_list:list):
-    url = f"{self.resource_url('_process')}?process_format=json"
-    data = {
-     #  'barcodes': '\n'.join(barcode_list)
-      'barcodes': barcode_list
-      }
-    breakpoint()
-    response = httpx.post(url=url,
-                          headers=self.auth_header,
-                          follow_redirects=True,
-                          data=data)
+    @property
+    def available_books(self):
+        fields: list = [
+            "barcode",
+            "scanned_date",
+            "processed_date",
+            "analyzed_date",
+            "ocrd_date",
+            "link",
+        ]
+        data = self.grin_data("available")
+        return table_to_dictlist(data, fields)
 
-    response_dict = {}
-    with io.StringIO(response.text) as f:
-      reader = csv.DictReader(f, delimiter='\t')
-      for row in reader:
-        response_dict[row['Barcode']] = row['Status']
+    @property
+    def in_process_books(self):
+        fields: list = [
+            "barcode",
+            "scanned_date",
+            "processed_date",
+            "analyzed_date",
+            "ocrd_date",
+            "link",
+        ]
+        data = self.grin_data("in_process")
+        return table_to_dictlist(data, fields)
 
-    return response_dict
-    
+    @property
+    def all_books(self):
+        fields: list = [
+            "barcode",
+            "scanned_date",
+            "processed_date",
+            "analyzed_date",
+            "converted_date",
+            "ocrd_date",
+            "link",
+        ]
+        data = self.grin_data("all_books")
+        return table_to_dictlist(data, fields)
 
-  def download_file(self, url, outpath):
-    with httpx.stream("GET", url, headers=self.auth_header,
-                      follow_redirects=True) as response:
-      response.raise_for_status()
-      with open(outpath, "wb") as f:
-        for chunk in response.iter_bytes():
-          f.write(chunk)
-    
+    @property
+    def converted_books(self) -> list | None:
+        """the GRIN for converted_books returns
+        a different format from the other apis;
+        the barcode needs to be extracted from the first field."""
+        fields = ["file", "scanned_date", "converted_date", "downloaded_date", "link"]
+        data = self.grin_data("converted")
+        dictlist = []
+        for row in data:
+            barcode = row[0].split(".")[0]
+            row_dict = dict(zip(fields, row))
+            row_dict["barcode"] = barcode
+            dictlist.append(row_dict)
+        return dictlist
 
-  def download_book(self, barcode, target_dir):
-    fname = f"{barcode}.tar.gz.gpg"
-    src_url = self.resource_url(fname)
-    outpath = f"{target_dir}/{fname}"
-    self.download_file(src_url, outpath)
+    def convert_book(self, barcode: str):
+        url = f"{self.resource_url('_process')}?barcodes={barcode}"
+        response = httpx.post(url=url, headers=self.auth_header, follow_redirects=True)
+        return response
 
+    def convert_books(self, barcode_list):
+        responses = {}
+        for barcode in barcode_list:
+            url = f"{self.resource_url('_process')}?barcodes={barcode}"
+            response = httpx.post(
+                url=url, headers=self.auth_header, follow_redirects=True
+            )
+
+            with io.StringIO(response.text) as f:
+                reader = csv.DictReader(f, delimiter="\t")
+                for row in reader:
+                    responses[row["Barcode"]] = row["Status"]
+
+        return responses
+
+    def convert(self, barcode_list: list):
+        url = f"{self.resource_url('_process')}?process_format=json"
+        data = {
+            #  'barcodes': '\n'.join(barcode_list)
+            "barcodes": barcode_list
+        }
+        breakpoint()
+        response = httpx.post(
+            url=url, headers=self.auth_header, follow_redirects=True, data=data
+        )
+
+        response_dict = {}
+        with io.StringIO(response.text) as f:
+            reader = csv.DictReader(f, delimiter="\t")
+            for row in reader:
+                response_dict[row["Barcode"]] = row["Status"]
+
+        return response_dict
+
+    def download_file(self, url, outpath):
+        with httpx.stream(
+            "GET", url, headers=self.auth_header, follow_redirects=True
+        ) as response:
+            response.raise_for_status()
+            with open(outpath, "wb") as f:
+                for chunk in response.iter_bytes():
+                    f.write(chunk)
+
+    def download_book(self, barcode, target_dir):
+        fname = f"{barcode}.tar.gz.gpg"
+        src_url = self.resource_url(fname)
+        outpath = f"{target_dir}/{fname}"
+        self.download_file(src_url, outpath)

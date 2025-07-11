@@ -10,9 +10,8 @@ logging_config.configure_logging()
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-
 def load_token(path):
-    with open(path, 'r') as f:
+    with open(path, "r") as f:
         return json.load(f)
 
 
@@ -31,7 +30,7 @@ def display_log(token):
             entry.get("stage", "?"),
             entry.get("timestamp", "?"),
             entry.get("level", "?"),
-            entry.get("message", "")
+            entry.get("message", ""),
         )
 
     console.print(table)
@@ -51,5 +50,5 @@ def main():
     display_log(token)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

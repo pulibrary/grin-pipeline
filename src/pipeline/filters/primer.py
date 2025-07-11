@@ -7,7 +7,9 @@ import json
 from pathlib import Path
 from clients import GrinClient
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+)
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -18,37 +20,37 @@ tokens for all of them.
 
 NB: this is a very naive implementation, just for testing the pipeline.
 """
+
+
 class Primer:
     def __init__(self, grin_client, to_bucket, processing_bucket):
-        self.grin_client:GrinClient = grin_client
+        self.grin_client: GrinClient = grin_client
         self.to_bucket = Path(to_bucket)
         self.processing_bucket = processing_bucket
-        
 
     def replentish_tokens(self):
         processed_books = [p.stem for p in Path(self.processing_bucket).glob("*.tgz")]
         converted_books = self.grin_client.converted_books
         unprocessed_books = None
         if converted_books:
-            unprocessed_books = [book for book in converted_books if book['barcode'] not in processed_books]
+            unprocessed_books = [
+                book
+                for book in converted_books
+                if book["barcode"] not in processed_books
+            ]
         if unprocessed_books:
             for book in unprocessed_books:
                 token_info = {
-                    "barcode" : book['barcode'],
-                    "processing_bucket" : self.processing_bucket
-                    }
-                token_filepath:Path = self.to_bucket / Path(f"{book['barcode']}.json")
-                with open(token_filepath, 'w') as f:
+                    "barcode": book["barcode"],
+                    "processing_bucket": self.processing_bucket,
+                }
+                token_filepath: Path = self.to_bucket / Path(f"{book['barcode']}.json")
+                with open(token_filepath, "w") as f:
                     json.dump(token_info, fp=f, indent=2)
 
-
     def generate_token(self, barcode):
-        token_info = {"barcode" : barcode, "processing_bucket" : self.processing_bucket}
-        token_filepath:Path = self.to_bucket / Path(f"{barcode}.json")
-        with open(token_filepath, 'w') as f:
+        token_info = {"barcode": barcode, "processing_bucket": self.processing_bucket}
+        token_filepath: Path = self.to_bucket / Path(f"{barcode}.json")
+        with open(token_filepath, "w") as f:
             json.dump(token_info, fp=f, indent=2)
         return token_info
-    
-        
-
-    

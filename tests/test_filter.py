@@ -13,26 +13,24 @@ outpath.mkdir(parents=True, exist_ok=True)
 pipe = Pipe(inpath, outpath)
 
 
+input_token_file: Path = inpath / Path("1234567.json")
+expected_outfile: Path = outpath / Path("1234567.json")
 
-input_token_file:Path = inpath / Path("1234567.json")
-expected_outfile:Path = outpath / Path("1234567.json")
-
-token_info:dict = {
-    "barcode" : "1234567"
-}
+token_info: dict = {"barcode": "1234567"}
 
 for f in [input_token_file, expected_outfile]:
     if f.exists():
         f.unlink()
 
-with open(input_token_file, 'w') as f:
+with open(input_token_file, "w") as f:
     json.dump(token_info, f, indent=2)
-    
+
 # Use a test filter: DoNothing just logs
 # to the token.
 
+
 class DoNothing(Filter):
-    def __init__(self, pipe:Pipe) -> None:
+    def __init__(self, pipe: Pipe) -> None:
         super().__init__(pipe)
 
     def validate_token(self, token) -> bool:
@@ -43,18 +41,14 @@ class DoNothing(Filter):
         return True
 
 
-filter:DoNothing = DoNothing(pipe)
-
+filter: DoNothing = DoNothing(pipe)
 
 
 def test_filter():
-
-    assert(input_token_file.exists() is True)
-    assert(expected_outfile.exists() is False)
+    assert input_token_file.exists() is True
+    assert expected_outfile.exists() is False
 
     filter.run_once()
 
-    assert(input_token_file.exists() is False)
-    assert (expected_outfile.exists() is True)
-    
-    
+    assert input_token_file.exists() is False
+    assert expected_outfile.exists() is True
