@@ -116,3 +116,28 @@ flow.
 
 The data files must go somewhere; the Orchestrator specifies locations
 when it creates tokens?
+
+** Another Workflow
+- Start Bucket :: Tickets start here. The process monitoring it posts, for
+  each token, a request to Grin, sets status to "Requested", and passes
+  the token.
+
+- Requested Bucket :: This bucket is monitored by two processes. The
+  first runs periodically and goes through all the tokens: for each,
+  the process queries GRIN to see if the token has been converted; if
+  it has, the process sets the status to "converted" and then passes
+  the token to the Converted Bucket.
+
+- Converted Bucket :: Process iterates over tokens in this bucket,
+  downloading the files to _processing_ and passing the token to the
+  Downloaded Bucket.
+
+- Downloaded Bucket :: decryptor processes these, sets status to
+  "Decrypted", and passes token to the Decrypted Bucket.
+
+- Decrypted Bucket :: the store process monitors this bucket and
+  uploads the file to storage.  Passes the token to the Stored Bucket.
+
+- Stored Bucket :: A process monitors this bucket and moves files from
+  the _processing_ bucket to the _processed_ bucket, which is
+  periodically emptied.

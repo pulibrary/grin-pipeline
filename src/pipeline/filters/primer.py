@@ -54,3 +54,28 @@ class Primer:
         with open(token_filepath, "w") as f:
             json.dump(token_info, fp=f, indent=2)
         return token_info
+
+
+class PrimeToStore:
+    def __init__(self, grin_client:GrinClient, to_bucket:str, processing_bucket:str):
+        self.grin_client: GrinClient = grin_client
+        self.to_bucket = Path(to_bucket)
+        self.processing_bucket = processing_bucket
+
+    def replentish_tokens(self):
+        
+        unprocessed_books = [p.stem for p in Path(self.processing_bucket).glob("*.tgz")]
+        for barcode in unprocessed_books:
+            token_info = self.generate_token(barcode)
+            token_filepath: Path = self.to_bucket / Path(f"{barcode}.json")
+            with token_filepath.open("w") as f:
+                json.dump(token_info, fp=f, indent=2)
+
+    def generate_token(self, barcode):
+        token_info = {"barcode": barcode, "processing_bucket": self.processing_bucket}
+        token_filepath:Path = self.to_bucket / Path(f"{barcode}.json")
+        with token_filepath.open("w") as f:
+            json.dump(token_info, fp=f, indent=2)
+        return token_info
+
+

@@ -43,7 +43,7 @@ def upload_to_s3(file_name, bucket_name, object_name=None):
 
 
 class Uploader(Filter):
-    def __init__(self, pipe: Pipe, s3_bucket:str) -> None:
+    def __init__(self, pipe: Pipe, s3_bucket:str="google-books-dev") -> None:
         super().__init__(pipe)
         self.s3_bucket = s3_bucket
 
@@ -66,6 +66,7 @@ class Uploader(Filter):
         return status
 
     def process_token(self, token:Token) -> bool:
+        print(f"Processing token: {token}")
         successflg = False
         s3 = boto3.client('s3')
         key = token.content['barcode']
@@ -87,3 +88,18 @@ class Uploader(Filter):
 
         
         return successflg
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input", required=True)
+    parser.add_argument("--output", required=True)
+    args = parser.parse_args()
+
+    pipe: Pipe = Pipe(Path(args.input), Path(args.output))
+
+    uploader: Uploader = Uploader(pipe)
+    logger.info("starting uploader")
+    uploader.run_forever()
+    
