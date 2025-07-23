@@ -67,39 +67,6 @@ class Decryptor(Filter):
 
         return successflg
 
-    def process_token_old(self, token: Token):
-        # encrypted_path = Path(token.content['encrypted_path'])
-        encrypted_path = Path(token.content["buckets"]["downloaded"])
-
-        if not encrypted_path.exists():
-            raise FileNotFoundError(f"Encrypted file not found: {encrypted_path}")
-
-        decrypted_path = encrypted_path.with_suffix("")
-
-        result = subprocess.run(
-            [
-                "gpg",
-                "--batch",
-                "--yes",
-                "--passphrase",
-                os.environ["DECRYPTION_PASSPHRASE"],
-                "--decrypt",
-                "--output",
-                str(decrypted_path),
-                str(encrypted_path),
-            ],
-            capture_output=True,
-            text=True,
-        )
-
-        if result.returncode != 0:
-            raise RuntimeError(f"GPG decryption failed: {result.stderr.strip()}")
-
-        token.content["decryption_status"] = "success"
-        token.content["decrypted_path"] = str(decrypted_path)
-        token.content["decrypted_size"] = decrypted_path.stat().st_size
-        self.log_to_token(token, "INFO", "Decryption successful")
-
 
 if __name__ == "__main__":
     if "DECRYPTION_PASSPHRASE" not in os.environ:
