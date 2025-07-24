@@ -4,6 +4,7 @@ from pathlib import Path
 import boto3
 from botocore.exceptions import NoCredentialsError
 from pipeline.plumbing import Pipe, Filter, Token
+from clients import S3Client
 
 
 logging.basicConfig(
@@ -12,34 +13,6 @@ logging.basicConfig(
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-
-
-def upload_to_s3(file_name, bucket_name, object_name=None):
-    """
-    Uploads a file to an S3 bucket.
-    
-    :param file_name: Path to the local file to upload
-    :param bucket_name: Name of the target S3 bucket
-    :param object_name: S3 object name (if different from local file name)
-    :return: True if file was uploaded, else False
-    """
-    if object_name is None:
-        object_name = file_name
-
-    # Create an S3 client
-    s3 = boto3.client('s3')
-
-    try:
-        s3.upload_file(file_name, bucket_name, object_name)
-        print(f"Upload Successful: {file_name} -> s3://{bucket_name}/{object_name}")
-        return True
-    except FileNotFoundError:
-        print("Error: The file was not found.")
-    except NoCredentialsError:
-        print("Error: AWS credentials not available.")
-    except Exception as e:
-        print(f"Unexpected error: {e}")
-    return False
 
 
 class Uploader(Filter):
@@ -62,10 +35,29 @@ class Uploader(Filter):
                 token, "ERROR", f"source file does not exist: {self.infile(token)}"
             )
             status = False
-
         return status
 
+
     def process_token(self, token:Token) -> bool:
+        successflg = False
+        s3 = S3Client(local_cache=Path(token.content['processing_bucket']))
+        barcode = token.content['barcode']
+        if s3.object_exists(barcode):
+            self.log_to_token(token, "INFO", "Object exists in store")
+            successflg = True
+        else:
+            status = s3.store_object(barcode)
+            if status:
+                self.log_to_token(token, "INFO", "Object stored")
+                successflg = True
+            else:
+                logging.error(f"Object not stored: {barcode}")
+                self.log_to_token(token, "ERROR", "Object not stored")
+            
+        return successflg
+
+
+    def process_token_old(self, token:Token) -> bool:
         print(f"Processing token: {token}")
         successflg = False
         s3 = boto3.client('s3')
