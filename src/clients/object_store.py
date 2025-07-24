@@ -6,7 +6,6 @@
 
 from pathlib import Path
 import boto3
-import botocore
 
 
 class ObjectStore:
@@ -14,7 +13,7 @@ class ObjectStore:
         self.object_service = None
 
 
-class S3(ObjectStore):
+class S3Client(ObjectStore):
     def __init__(self, local_cache:Path, bucket_name:str = 'google-books-dev'):
         super().__init__()
         self.object_service = "Amazon S3"
@@ -24,7 +23,7 @@ class S3(ObjectStore):
 
     def object_exists(self, key:str) -> bool:
         try:
-            resp = self.client.get_object_attributes(
+            self.client.get_object_attributes(
                 Bucket=self.bucket_name,
                 Key=key,
                 ObjectAttributes=['ETag'])
@@ -42,7 +41,7 @@ class S3(ObjectStore):
             return True
 
         except self.client.exceptions.NoCredentialsError as e:
-            print("AWS credentials not available: {e}")
+            print(f"AWS credentials not available: {e}")
             return False
 
     def store_object(self, barcode, overwrite=False) -> bool:
