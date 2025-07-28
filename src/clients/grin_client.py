@@ -5,7 +5,7 @@
 # from the example given in the GRIN Overview document (not
 # publicly available.
 
-
+import os
 import httplib2
 import httpx
 import io
@@ -13,11 +13,13 @@ import csv
 import functools
 import time
 import threading
-
+from dotenv import load_dotenv
 
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.file import Storage
 from oauth2client.tools import run_flow
+
+load_dotenv()
 
 
 # These are the authentication scopes you are requesting. These are the limited
@@ -32,18 +34,13 @@ SCOPES = [
 # This is the file you downloaded from console.developers.google.com when you
 # created your 'project'. You need this to generate credentials. Once you've
 # generated the credentials, you could delete this file.
-SECRETS_FILE = ".secrets"
+sfile = os.getenv('GOOGLE_SECRETS_FILE')
 
 # This file contains the authorization token ('access_token') shared with GRIN,
 # and the refresh token ('refresh_token') used to issue access tokens when your
 # current token has expired.
-# CREDENTIALS_FILE = '.creds'
+cfile = os.getenv('GOOGLE_TOKEN_FILE')
 
-# for development only; remove
-cfile = "/Users/wulfmanc/gh/pulibrary/pugrin/.creds"
-sfile = "/Users/wulfmanc/gh/pulibrary/pugrin/.secrets"
-
-CREDENTIALS_FILE = "/Users/wulfmanc/repos/pulibrary/pugrin/.creds"
 
 # How much we read/write when streaming response data.
 OUTPUT_BLOCKSIZE = 1024 * 1024
