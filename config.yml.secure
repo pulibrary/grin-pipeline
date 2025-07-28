@@ -1,9 +1,0 @@
-global:
-  temp_dir: /tmp/pipeline
-  gpg_passphrase: "s3cr3t"
-
-filters:
-  - name: decryptor
-    class: Decryptor
-    input_pipe: pipeline/01_incoming
-    output_pipe: pipeline/02_decrypted
