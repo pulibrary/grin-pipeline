@@ -62,10 +62,13 @@ class PrimeToStore:
         self.to_bucket = Path(to_bucket)
         self.processing_bucket = processing_bucket
 
-    def replentish_tokens(self):
-        
+    def unprocessed_books(self):
         unprocessed_books = [p.stem for p in Path(self.processing_bucket).glob("*.tgz")]
-        for barcode in unprocessed_books:
+        return unprocessed_books
+
+    def replentish_tokens(self):
+        unprocessed_books = 
+        for barcode in self.unprocessed_books():
             token_info = self.generate_token(barcode)
             token_filepath: Path = self.to_bucket / Path(f"{barcode}.json")
             with token_filepath.open("w") as f:

@@ -28,6 +28,7 @@ class Uploader(Filter):
 
 
     def validate_token(self, token) -> bool:
+        s3 = S3Client(local_cache=Path(token.content['processing_bucket']))
         status: bool = True
         if self.infile(token).exists() is False:
             logging.error(f"source file does not exist: {self.infile(token)}")
@@ -46,40 +47,19 @@ class Uploader(Filter):
             self.log_to_token(token, "INFO", "Object exists in store")
             successflg = True
         else:
+            logging.info(f"Store operation starting: {barcode}")
             status = s3.store_object(barcode)
+            logging.info(f"Store operation complete: {barcode}")
             if status:
                 self.log_to_token(token, "INFO", "Object stored")
                 successflg = True
             else:
                 logging.error(f"Object not stored: {barcode}")
                 self.log_to_token(token, "ERROR", "Object not stored")
+                successflg = False
             
         return successflg
 
-
-    def process_token_old(self, token:Token) -> bool:
-        print(f"Processing token: {token}")
-        successflg = False
-        s3 = boto3.client('s3')
-        key = token.content['barcode']
-        try:
-            s3.upload_file(self.infile(token), self.s3_bucket, key)
-            token.content['upload_status'] = "success"
-            self.log_to_token(token, "INFO", "Upload successful")
-            successflg = True
-
-        except FileNotFoundError as e:
-            token.content['upload_status'] = "fail"
-            self.log_to_token(token, "ERROR", f"Upload error: {e}")
-            successflg = False
-
-        except NoCredentialsError as e:
-            token.content['upload_status'] = "fail"
-            self.log_to_token(token, "ERROR", f"Credentials error: {e}")
-            successflg = False
-
-        
-        return successflg
 
 if __name__ == "__main__":
     import argparse

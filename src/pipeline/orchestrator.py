@@ -251,7 +251,9 @@ class Orchestrator_old:
         signal.signal(signal.SIGINT, shutdown_handler)
         signal.signal(signal.SIGTERM, shutdown_handler)
 
+        logging.info("Starting filters")
         self.start_filters()
+        logging.info("Starting repl")
         self.repl()
 
 

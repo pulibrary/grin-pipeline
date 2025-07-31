@@ -39,6 +39,7 @@ class Decryptor(Filter):
         return status
 
     def process_token(self, token: Token) -> bool:
+        logger.info(f"processing token {token.content['barcode']}")
         successflg = False
         result = subprocess.run(
             [
@@ -82,5 +83,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     pipe: Pipe = Pipe(Path(args.input), Path(args.output))
+    logger.info("starting decryptor")
     decryptor = Decryptor(pipe)
     decryptor.run_forever()
