@@ -26,6 +26,8 @@ Thumbs.db
 # secrets
 .secrets
 .creds
+token.json
+client_secret.json
 
 # GPG-encrypted config
 config.yml.gpg
