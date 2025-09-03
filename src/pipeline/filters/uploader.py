@@ -16,9 +16,9 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class Uploader(Filter):
-    def __init__(self, pipe: Pipe, s3_bucket:str="google-books-dev") -> None:
+    def __init__(self, pipe: Pipe) -> None:
         super().__init__(pipe)
-        self.s3_bucket = s3_bucket
+
 
 
     def infile(self, token: Token) -> Path:
@@ -28,7 +28,6 @@ class Uploader(Filter):
 
 
     def validate_token(self, token) -> bool:
-        s3 = S3Client(local_cache=Path(token.content['processing_bucket']))
         status: bool = True
         if self.infile(token).exists() is False:
             logging.error(f"source file does not exist: {self.infile(token)}")
@@ -40,26 +39,38 @@ class Uploader(Filter):
 
 
     def process_token(self, token:Token) -> bool:
+        raise NotImplementedError("Subclasses must implement 'process_token'.")
+
+
+class AWSUploader(Uploader):
+    def __init__(self, pipe: Pipe, s3_client:S3Client) -> None:
+        super().__init__(pipe)
+        self.client = s3_client
+
+    def process_token(self, token:Token) -> bool:
         successflg = False
-        s3 = S3Client(local_cache=Path(token.content['processing_bucket']))
         barcode = token.content['barcode']
-        if s3.object_exists(barcode):
+        if self.client.object_exists(barcode):
             self.log_to_token(token, "INFO", "Object exists in store")
+            token.content["upload_status"] = "duplicate"
             successflg = True
         else:
             logging.info(f"Store operation starting: {barcode}")
-            status = s3.store_object(barcode)
+            status = self.client.store_object(barcode)
             logging.info(f"Store operation complete: {barcode}")
-            if status:
+            if status is True:
                 self.log_to_token(token, "INFO", "Object stored")
+                token.content["upload_status"] = "success"
                 successflg = True
             else:
                 logging.error(f"Object not stored: {barcode}")
                 self.log_to_token(token, "ERROR", "Object not stored")
+                token.content["upload_status"] = "fail"
                 successflg = False
-            
-        return successflg
+        
 
+        return successflg
+    
 
 if __name__ == "__main__":
     import argparse
@@ -67,11 +78,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", required=True)
     parser.add_argument("--output", required=True)
+    parser.add_argument("--store", default="google-books-dev")
+    parser.add_argument("--cache", default="/tmp")
     args = parser.parse_args()
 
     pipe: Pipe = Pipe(Path(args.input), Path(args.output))
+    s3_client = S3Client(args.cache, args.store)
 
-    uploader: Uploader = Uploader(pipe)
+    uploader: AWSUploader = AWSUploader(pipe, s3_client)
     logger.info("starting uploader")
     uploader.run_forever()
     
