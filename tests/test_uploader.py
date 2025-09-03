@@ -127,7 +127,7 @@ def test_upload_failure():
     test_s3_bucket = "google-books-dev"
 
 
-    Token_info: dict = {
+    token_info: dict = {
         "barcode": "1234567",
         "processing_bucket": str(processing_bucket)
     }
