@@ -10,12 +10,16 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class Token:
-    def __init__(self, content: dict, name: str):
-        self.name = name
+    def __init__(self, content: dict):
         self.content = content
+
 
     def __repr__(self) -> str:
         return f"Token({self.name})"
+
+    @property
+    def name(self):
+        return self.content['barcode']
 
     def write_log(
         self, message: str, level: Optional[str] = None, stage: Optional[str] = None
@@ -27,6 +31,18 @@ class Token:
             entry["level"] = level
 
         self.content.setdefault("log", []).append(entry)
+
+# Utilities for reading and writing Tokens
+
+def load_token(token_file:Path):
+    with token_file.open('r') as f:
+        token_info = json.load(f)
+        return Token(token_info)
+
+def dump_token(token, bag_dir:Path):
+    token_path: Path = (bag_dir / token.barcode).with_suffix(".json")
+    with token_path.open("w+") as f:
+        json.dump(token.content, fp=f, indent=2)
 
 
 class Pipe:
@@ -76,7 +92,8 @@ class Pipe:
 
             with open(token_path, "r") as f:
                 content: dict = json.load(f)
-                self.token = Token(content=content, name=token_path.stem)
+                # self.token = Token(content=content, name=token_path.stem)
+                self.token = Token(content)
 
             self.mark_token()
             return self.token
@@ -93,6 +110,18 @@ class Pipe:
             self.token_marked_path.unlink()
 
     def put_token(self, errorFlg: bool = False) -> None:
+        if self.token:
+            if errorFlg:
+                out_path = self.token_error_path
+            else:
+                out_path = self.token_out_path
+                
+            dump_token(self.token, out_path)
+
+            self.delete_marked_token()
+            self.token = None
+
+    def put_token_old(self, errorFlg: bool = False) -> None:
         if self.token:
             if errorFlg:
                 with open(self.token_error_path, "w") as f:
