@@ -39,8 +39,11 @@ def load_token(token_file:Path):
         token_info = json.load(f)
         return Token(token_info)
 
-def dump_token(token, bag_dir:Path):
-    token_path: Path = (bag_dir / token.barcode).with_suffix(".json")
+def dump_token(token, bag_dir:Path, filename=None):
+    if filename is None:
+        token_path: Path = (bag_dir / token.name).with_suffix(".json")
+    else:
+        token_path:Path = bag_dir / filename
     with token_path.open("w+") as f:
         json.dump(token.content, fp=f, indent=2)
 
@@ -64,7 +67,8 @@ class Pipe:
     @property
     def token_out_path(self) -> Path:
         if self.token:
-            return self.output / Path(self.token.name).with_suffix(".json")
+            # return self.output / Path(self.token.name).with_suffix(".json")
+            return self.output
         else:
             raise ValueError("pipe doesn't contain a token")
 
@@ -89,12 +93,7 @@ class Pipe:
 
         try:
             token_path = next(self.input.glob("*.json"))
-
-            with open(token_path, "r") as f:
-                content: dict = json.load(f)
-                # self.token = Token(content=content, name=token_path.stem)
-                self.token = Token(content)
-
+            self.token = load_token(token_path)
             self.mark_token()
             return self.token
 

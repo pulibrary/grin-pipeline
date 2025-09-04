@@ -1,6 +1,6 @@
 from pathlib import Path
 import json
-from pipeline.plumbing import Filter, Pipe
+from pipeline.plumbing import Filter, Pipe, Token, load_token, dump_token
 
 
 inpath = Path("/tmp/test_pipeline_filter/in")
@@ -22,8 +22,10 @@ for f in [input_token_file, expected_outfile]:
     if f.exists():
         f.unlink()
 
-with open(input_token_file, "w") as f:
-    json.dump(token_info, f, indent=2)
+token = Token(token_info)
+dump_token(token, inpath)
+
+
 
 # Use a test filter: DoNothing just logs
 # to the token.
