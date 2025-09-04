@@ -264,7 +264,6 @@ class GrinClient:
             #  'barcodes': '\n'.join(barcode_list)
             "barcodes": barcode_list
         }
-        breakpoint()
         response = httpx.post(
             url=url, headers=self.auth_header, follow_redirects=True, data=data
         )
