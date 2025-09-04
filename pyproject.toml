@@ -42,6 +42,6 @@ build-backend = "pdm.backend"
 [dependency-groups]
 dev = [
     "basedpyright>=1.28.5",
-    "pytest-datadir>=1.6.1",
+    "pytest-datadir>=1.8.0",
     "mypy>=1.17.0",
 ]
