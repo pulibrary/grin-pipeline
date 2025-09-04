@@ -9,9 +9,23 @@ import shutil
 @dataclass
 class Book:
     barcode:str
-    date_requested:str
-    date_completed:str
-    status:str
+    date_requested:str | None
+    date_completed:str | None
+    status:str | None
+
+    def __init__(self,
+                 barcode:str, date_requested: str, date_completed: str, status: str| None) -> None:
+        self.barcode = barcode
+        self.date_requested = None
+        self.date_completed = None
+        self.status = None
+
+        if date_requested: self.date_requested = date_requested
+        if date_completed: self.date_completed = date_completed
+        if status: self.status = status
+
+    
+                 
     
 
 
