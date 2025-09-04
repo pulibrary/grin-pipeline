@@ -1,0 +1,47 @@
+global:
+  log_level: INFO
+  poll_interval: 5
+  object_service: aws
+  object_store: google-books-dev
+
+buckets:
+  - name: requested
+    path: /var/tmp/pipeline/requested
+  - name: converted
+    path: /var/tmp/pipeline/converted
+  - name: downloaded
+    path: /var/tmp/pipeline/downloaded
+  - name: decrypted
+    path: /var/tmp/pipeline/decrypted
+  - name: stored
+    path: /var/tmp/pipeline/stored
+  - name: done
+    path: /var/tmp/pipeline/done
+
+filters:
+  - name: downloader
+    class: Downloader
+    script: src/pipeline/filters/downloader.py
+    grin_qps: 5
+    pipe:
+        in: converted
+        out: downloaded
+  - name: decryptor
+    class: Decryptor
+    script: src/pipeline/filters/decryptor.py
+    decryption_passphrase: phrase goes here
+    pipe:
+        in: downloaded
+        out: decrypted
+  - name: uploader
+    class: Uploader
+    script: src/pipeline/filters/uploader.py
+    pipe:
+        in: decrypted
+        out: stored
+  - name: cleaner
+    class: Cleaner
+    script: src/pipeline/filters/cleaner.py
+    pipe:
+        in: stored
+        out: done

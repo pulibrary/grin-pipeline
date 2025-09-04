@@ -6,6 +6,7 @@ import signal
 import sys
 import logging
 from pipeline.config_loader import load_config
+from plumbing import Pipeline
 
 config_path: str = os.environ.get("PIPELINE_CONFIG", "config.yml")
 config: dict = load_config(config_path)
@@ -19,12 +20,35 @@ logging.basicConfig(level=log_level)
 class Orchestrator:
     def __init__(self) -> None:
         self.processes = []
+        self.pipeline = Pipeline(config_path)
 
     def start_filters(self):
         for filt in config.get("filters", []):
             self.start_filter(filt)
 
     def start_filter(self, filt):
+        extra_env = {}
+
+        in_bucket = str(self.pipeline.bucket(filt["pipe"]["in"]))
+        out_bucket = str(self.pipeline.bucket(filt["pipe"]["out"]))
+        cmd = [
+            sys.executable,
+            filt["script"],
+            "--input",
+            in_bucket,
+            "--output",
+            out_bucket,
+        ]
+        if "decryption_passphrase" in filt:
+            extra_env["DECRYPTION_PASSPHRASE"] = filt["decryption_passphrase"]
+
+        logging.info("Starting filter: %s", " ".join(cmd))
+        proc = subprocess.Popen(cmd, env={**os.environ, **extra_env})
+        self.processes.append((filt["name"], proc))
+
+
+
+    def start_filter_old(self, filt):
         extra_env = {}
         cmd = [
             sys.executable,
@@ -123,9 +147,12 @@ if __name__ == "__main__":
     # if 'GPG_PASSPHRASE' not in os.environ:
     #     print("Please set the GPG_PASSPHRASE environment variable.")
     #     sys.exit(1)
+    if "PIPELINE_CONFIG" not in os.environ:
+         print("Please set the PIPELINE_CONFIG environment variable.")
+         sys.exit(1)
 
-    config_file = 'config.yml.gpg'
-    config_file = 'config.yml'
+    # config_file = 'config.yml.gpg'
+    # config_file = 'config.yml'
 
     # orchestrator = Orchestrator(config_file)
     orchestrator = Orchestrator()

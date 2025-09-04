@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from time import sleep
 import logging
 from typing import Optional
+from pipeline.config_loader import load_config
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -155,3 +156,22 @@ class Filter:
 
     def validate_token(self, token: Token) -> bool:
         raise NotImplementedError("Subclasses must implement this")
+
+class Pipeline:
+    def __init__(self, config_file:str):
+        self.config = load_config(config_file)
+        self.buckets = {}
+        for rec in self.config.get("buckets", {}):
+            name = rec.get("name", "")
+            location =  Path(rec.get("path", "/dev/null"))
+            self.add_bucket(name, location)
+
+    def add_bucket(self, name:str, location:Path):
+        self.buckets[name] = location
+
+    def bucket(self, name:str):
+        return self.buckets.get(name)
+
+    def pipe(self, in_bucket:str, out_bucket:str):
+        return Pipe(Path(in_bucket), Path(out_bucket))
+    
