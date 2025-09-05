@@ -1,4 +1,6 @@
 import tempfile
+import shutil
+from pathlib import Path
 from pipeline.token_bag import TokenBag
 
 
@@ -21,18 +23,6 @@ def test_find_token(shared_datadir):
 
     tok = bag.find("foobarbaz")
     assert tok is None
-
-
-def test_take_token(shared_datadir):
-    bag_dir = shared_datadir / "tokens"
-    bag = TokenBag(bag_dir)
-    bag.load()
-
-    assert len(bag.tokens) == 2
-    tok = bag.take_token('345')
-    assert tok.name == '345'
-    assert len(bag.tokens) == 1
-    assert bag.find('345') is None
 
 
 def test_put_token(shared_datadir):
@@ -68,4 +58,50 @@ def test_add_books(shared_datadir):
     assert new_tok.name == barcodes[1]
     
 
-    
+
+def test_dump_bag(shared_datadir):
+    with tempfile.TemporaryDirectory() as tmpdir:
+        bag_dir = shared_datadir / "tokens"
+        test_bag_dir = Path(tmpdir) / "tokens"
+        shutil.copytree(bag_dir, test_bag_dir)
+
+        bag = TokenBag(test_bag_dir)
+        bag.load()
+        assert len(bag.tokens) == 2
+        bag.dump()
+        bag2 = TokenBag(test_bag_dir)
+        bag2.load()
+        assert len(bag2.tokens) == 2
+
+
+def test_take_token(shared_datadir):
+    with tempfile.TemporaryDirectory() as tmpdir:
+        bag_dir = shared_datadir / "tokens"
+        test_bag_dir = Path(tmpdir) / "tokens"
+        shutil.copytree(bag_dir, test_bag_dir)
+
+        barcode = '234'
+        files = list(test_bag_dir.glob("*.json"))
+        assert len(files) == 2
+        bag = TokenBag(test_bag_dir)
+        bag.load()
+        assert len(bag.tokens) == 2
+        tok = bag.find(barcode)
+        assert tok is not None
+
+        taken_token = bag.take_token(barcode)
+        assert len(bag.tokens) == 1
+
+        tok = bag.find(barcode)
+        assert tok is None
+
+        bag.dump()
+
+        files = list(test_bag_dir.glob("*.json"))
+        assert len(files) == 1
+
+        bag = TokenBag(test_bag_dir)
+        bag.load()
+        assert len(bag.tokens) == 1
+        tok = bag.find(barcode)
+        assert tok is None

@@ -14,6 +14,10 @@ class TokenBag:
         self.bag_dir = Path(bag_dir)
 
 
+    def clear_bag_dir(self):
+        for f in self.bag_dir.glob("*.json"):
+            f.unlink()
+
     def load(self):
         for item in self.bag_dir.iterdir():
             if item.is_file() and item.suffix == '.json':
@@ -21,6 +25,7 @@ class TokenBag:
                 self.tokens.append(token)
 
     def dump(self) -> None:
+        self.clear_bag_dir()
         for token in self.tokens:
             dump_token(token, self.bag_dir)
 
