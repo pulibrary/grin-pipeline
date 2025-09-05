@@ -1,38 +1,38 @@
 from pathlib import Path
 import tempfile
 import shutil
-from pipeline.book_pile import BookPile, Book
+from pipeline.book_ledger import BookLedger, Book
 from pipeline.token_bag import TokenBag
 
 
 
 
-def test_add_to_bag_from_pile(shared_datadir):
+def test_add_to_bag_from_ledger(shared_datadir):
     bag_dir = shared_datadir / "tokens"
-    pile_file = shared_datadir / "test_pile.csv"
+    ledger_file = shared_datadir / "test_ledger.csv"
 
     with tempfile.TemporaryDirectory() as tmpdir:
         test_token_dir = Path(tmpdir) / "tokens"
         shutil.copytree(bag_dir, test_token_dir)
         assert test_token_dir.is_dir()
 
-        test_pile_file = Path(tmpdir) / "pile.csv"
-        shutil.copy(pile_file, test_pile_file)
-        assert test_pile_file.is_file()
+        test_ledger_file = Path(tmpdir) / "ledger.csv"
+        shutil.copy(ledger_file, test_ledger_file)
+        assert test_ledger_file.is_file()
 
         bag = TokenBag(test_token_dir)
         bag.load()
         assert len(bag.tokens) == 2
 
-        pile = BookPile(test_pile_file)
-        assert len(pile.books) == 9
+        ledger = BookLedger(test_ledger_file)
+        assert len(ledger.books) == 9
 
         barcode = '32101078166681'
 
-        book:Book | None = pile.get_book(barcode)
+        book:Book | None = ledger.get_book(barcode)
         assert book is not None and book.status is None
 
-        chosen_book:Book | None = pile.choose_book(barcode)
+        chosen_book:Book | None = ledger.choose_book(barcode)
         assert chosen_book == book
         assert chosen_book is not None
         assert chosen_book.status == 'chosen'

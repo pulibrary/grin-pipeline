@@ -2,7 +2,7 @@ from pipeline.plumbing import Token,load_token, dump_token
 
 
 def test_load_token(shared_datadir):
-    test_token_file = shared_datadir / "tokens/test_token.json"
+    test_token_file = shared_datadir / "tokens/345.json"
     test_token:Token = load_token(test_token_file)
 
     assert test_token.name == '345'

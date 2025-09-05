@@ -1,4 +1,4 @@
-# book_pile.py
+# book_ledger.py
 
 import csv
 from dataclasses import dataclass
@@ -29,7 +29,7 @@ class Book:
     
 
 
-class BookPile:
+class BookLedger:
     def __init__(self, csv_file):
         self.csv_file = Path(csv_file)
         self._books = None
@@ -37,7 +37,7 @@ class BookPile:
         self.chosen_books = []
         
 
-    def read_pile(self):
+    def read_ledger(self):
         books = {}
         with self.csv_file.open('r') as f:
             reader:csv.DictReader = csv.DictReader(f)
@@ -48,7 +48,7 @@ class BookPile:
         return books
 
 
-    def write_pile(self, backup=True):
+    def write_ledger(self, backup=True):
         if backup is True:
             backup_path = Path(f"{str(self.csv_file)}~")
             shutil.copy2(self.csv_file, backup_path)
@@ -69,7 +69,7 @@ class BookPile:
     @property
     def books(self):
         if self._books is None:
-            self._books = self.read_pile()
+            self._books = self.read_ledger()
         return self._books
 
 
@@ -91,4 +91,4 @@ class BookPile:
             return book
 
         else:
-            raise ValueError(f"book {barcode} not in pile")
+            raise ValueError(f"book {barcode} not in ledger")
