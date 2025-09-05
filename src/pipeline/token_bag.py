@@ -10,7 +10,6 @@ from src.pipeline.plumbing  import Token, load_token, dump_token
 
 class TokenBag:
     def __init__(self, bag_dir) -> None:
-        self.books = set()
         self.tokens = []
         self.bag_dir = Path(bag_dir)
 

@@ -88,6 +88,7 @@ class BookPile:
         if book:
             book.status = 'chosen'
             self.chosen_books.append(book)
+            return book
 
         else:
             raise ValueError(f"book {barcode} not in pile")

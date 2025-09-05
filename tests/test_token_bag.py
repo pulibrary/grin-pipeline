@@ -1,3 +1,4 @@
+import tempfile
 from pipeline.token_bag import TokenBag
 
 
@@ -65,4 +66,6 @@ def test_add_books(shared_datadir):
     new_tok = bag.find(barcodes[1])
     assert new_tok is not None
     assert new_tok.name == barcodes[1]
+    
+
     
