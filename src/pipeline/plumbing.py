@@ -17,9 +17,16 @@ class Token:
     def __repr__(self) -> str:
         return f"Token({self.name})"
 
+    def get_prop(self, prop):
+        return self.content.get(prop)
+
+    def put_prop(self, prop, val):
+        self.content[prop] = val
+        return self.get_prop(val)
+
     @property
     def name(self):
-        return self.content['barcode']
+        return self.get_prop('barcode')
 
     def write_log(
         self, message: str, level: Optional[str] = None, stage: Optional[str] = None
@@ -116,18 +123,6 @@ class Pipe:
                 out_path = self.token_out_path
                 
             dump_token(self.token, out_path)
-
-            self.delete_marked_token()
-            self.token = None
-
-    def put_token_old(self, errorFlg: bool = False) -> None:
-        if self.token:
-            if errorFlg:
-                with open(self.token_error_path, "w") as f:
-                    json.dump(self.token.content, f)
-            else:
-                with open(self.token_out_path, "w") as f:
-                    json.dump(self.token.content, f)
 
             self.delete_marked_token()
             self.token = None

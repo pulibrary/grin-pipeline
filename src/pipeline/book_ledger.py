@@ -1,5 +1,5 @@
 # book_ledger.py
-
+from datetime import datetime
 import csv
 from dataclasses import dataclass
 from pathlib import Path
@@ -9,18 +9,18 @@ import shutil
 @dataclass
 class Book:
     barcode:str
-    date_requested:str | None
+    date_chosen:str | None
     date_completed:str | None
     status:str | None
 
     def __init__(self,
-                 barcode:str, date_requested: str, date_completed: str, status: str| None) -> None:
+                 barcode:str, date_chosen: str, date_completed: str, status: str| None) -> None:
         self.barcode = barcode
-        self.date_requested = None
+        self.date_chosen = None
         self.date_completed = None
         self.status = None
 
-        if date_requested: self.date_requested = date_requested
+        if date_chosen: self.date_chosen = date_chosen
         if date_completed: self.date_completed = date_completed
         if status: self.status = status
 
@@ -36,6 +36,7 @@ class BookLedger:
         self._fieldnames = []
         self.chosen_books = []
         
+            
 
     def read_ledger(self):
         books = {}
@@ -87,8 +88,24 @@ class BookLedger:
         book = self.get_book(barcode)
         if book:
             book.status = 'chosen'
+            book.date_chosen = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.chosen_books.append(book)
             return book
 
         else:
             raise ValueError(f"book {barcode} not in ledger")
+
+    @property
+    def all_chosen_books(self):
+        return [book for book in self.books if book.status == 'chosen']
+        
+
+    @property
+    def all_completed_books(self):
+        return [book for book in self.books if book.status == 'completed']
+
+
+    @property
+    def all_unprocessed_books(self):
+
+        return [book for _,book in self.books.items() if book.status is None]
