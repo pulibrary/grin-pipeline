@@ -129,7 +129,7 @@ class Orchestrator:
                 self.stop_filters()
                 break
 
-    def run(self):
+    def run(self, repl:bool=True):
         def shutdown_handler(signum, frame):
             print("\nShutting down Orchestrator...")
             self.stop_filters()
@@ -139,7 +139,8 @@ class Orchestrator:
         signal.signal(signal.SIGTERM, shutdown_handler)
 
         self.start_filters()
-        self.repl()
+        if repl is True:
+            self.repl()
 
 
 
@@ -156,4 +157,4 @@ if __name__ == "__main__":
 
     # orchestrator = Orchestrator(config_file)
     orchestrator = Orchestrator()
-    orchestrator.run()
+    orchestrator.run(repl=True)

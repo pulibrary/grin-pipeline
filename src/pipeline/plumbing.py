@@ -66,7 +66,7 @@ class Pipe:
 
     @property
     def token_in_path(self) -> Path:
-        if self.token:
+        if self.token and self.token.name:
             return self.input / Path(self.token.name).with_suffix(".json")
         else:
             raise ValueError("pipe doesn't contain a token")
@@ -81,14 +81,14 @@ class Pipe:
 
     @property
     def token_marked_path(self) -> Path:
-        if self.token:
+        if self.token and self.token.name:
             return self.input / Path(self.token.name).with_suffix(".bak")
         else:
             raise ValueError("pipe doesn't contain a token")
 
     @property
     def token_error_path(self) -> Path:
-        if self.token:
+        if self.token and self.token.name:
             return self.input / Path(self.token.name).with_suffix(".err")
         else:
             raise ValueError("pipe doesn't contain a token")
@@ -138,7 +138,6 @@ class Filter:
 
     def run_once(self) -> bool:
         token: Token | None = self.pipe.take_token()
-
         if not token:
             # logging.info("No tokens available")
             return False

@@ -3,31 +3,38 @@
 
 import json
 from pathlib import Path
-from src.pipeline.plumbing  import Token, load_token, dump_token
+from pipeline.plumbing  import Token, load_token, dump_token
 
         
     
 
 class TokenBag:
-    def __init__(self, bag_dir) -> None:
+    def __init__(self, bag_dir: str | None = None):
         self.tokens = []
-        self.bag_dir = Path(bag_dir)
+        if bag_dir:
+            self.bag_dir = Path(bag_dir)
 
+
+    def set_bag_dir(self, path:Path):
+        self.bag_dir = path
 
     def clear_bag_dir(self):
-        for f in self.bag_dir.glob("*.json"):
-            f.unlink()
+        if self.bag_dir:
+            for f in self.bag_dir.glob("*.json"):
+                f.unlink()
 
     def load(self):
-        for item in self.bag_dir.iterdir():
-            if item.is_file() and item.suffix == '.json':
-                token = load_token(item)
-                self.tokens.append(token)
+        if self.bag_dir:
+            for item in self.bag_dir.iterdir():
+                if item.is_file() and item.suffix == '.json':
+                    token = load_token(item)
+                    self.tokens.append(token)
 
     def dump(self) -> None:
-        self.clear_bag_dir()
-        for token in self.tokens:
-            dump_token(token, self.bag_dir)
+        if self.bag_dir:
+            self.clear_bag_dir()
+            for token in self.tokens:
+                dump_token(token, self.bag_dir)
 
     def find(self, barcode):
         hits = [tok for tok in self.tokens if tok.name == barcode]
@@ -54,4 +61,10 @@ class TokenBag:
     def add_books(self, book_list:list[str]):
         for book in book_list:
             self.add_book(book)
- 
+
+
+    def set_processing_directory(self, directory:str, update_tokens:bool=True):
+        self.processing_directory = directory
+        if update_tokens is True:
+            for token in self.tokens:
+                token.put_prop('processing_bucket', directory)

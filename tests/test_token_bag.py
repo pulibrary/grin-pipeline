@@ -105,3 +105,21 @@ def test_take_token(shared_datadir):
         assert len(bag.tokens) == 1
         tok = bag.find(barcode)
         assert tok is None
+
+def test_assign_processing_bucket(shared_datadir):
+    bag_dir = shared_datadir / "tokens"
+    bag = TokenBag(bag_dir)
+    bag.load()
+
+    barcodes = ['5678', '91234']
+
+    bag.add_books(barcodes)
+    tok = bag.find('5678')
+    assert tok is not None
+    assert tok.get_prop('processing_bucket') is None
+    fake_processing_bucket = "/tmp"
+    bag.set_processing_directory(fake_processing_bucket)
+    tok = bag.find('5678')
+    assert tok is not None
+    assert tok.get_prop('processing_bucket') == fake_processing_bucket
+    
