@@ -3,6 +3,7 @@ import logging
 import os
 from pathlib import Path
 from pipeline.config_loader import load_config
+from pipeline.token_bag_manager import BagManager
 from pipeline.book_ledger import BookLedger, Book
 from pipeline.token_bag import TokenBag
 from pipeline.plumbing import Token
@@ -21,8 +22,8 @@ class Stager:
                  path_to_token_bag:Path,
                  path_to_processing_bucket:Path) -> None:
         self.ledger = BookLedger(path_to_ledger)
-        self.token_bag = TokenBag(path_to_token_bag)
-        self.token_bag.load()
+        self.bag_manager = BagManager(TokenBag(path_to_token_bag),
+                                      BookLedger(path_to_ledger))
         self.processing_bucket = path_to_processing_bucket
 
 
@@ -31,8 +32,9 @@ class Stager:
         chosen_books = self.ledger.all_chosen_books
         print(f"number of chosen books:\t{len(chosen_books)}")
 
+
     def commit_changes(self):
-        pass
+        self.bag_manager.commit()
 
 
     def choose_books(self, how_many:int):
@@ -40,8 +42,11 @@ class Stager:
         books_to_choose:list[Book] | None  = all_unprocessed_books[0:how_many]
         if books_to_choose:
             for book in books_to_choose:
-                book = self.ledger.choose_book(book.barcode)
-                token = Token({'barcode' : book.barcode})
-                token.put_prop("processing_bucket", self.processing_bucket)
-                token.write_log("token created")
-                self.token_bag.put_token(token)
+                self.bag_manager.choose_book(book.barcode)
+
+
+    def stage(self):
+        """Fills the token bag. Sets the processing directory
+        in the tokens.
+        """
+        pass

@@ -14,11 +14,15 @@ class BagManager:
         self.ledger.read_ledger()
 
 
+    @property
+    def bag_size(self) -> int:
+        return self.bag.size
+
+
     def status(self):
         stats = {}
 
         stats['bag_current_size'] = len(self.bag.tokens)
-        stats['bag_percent_full'] = len(self.bag.tokens) / self.bag.max_size * 100
 
         return stats
 

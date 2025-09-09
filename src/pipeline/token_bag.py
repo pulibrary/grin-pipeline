@@ -9,9 +9,8 @@ from pipeline.plumbing  import Token, load_token, dump_token
     
 
 class TokenBag:
-    def __init__(self, bag_dir: Path | None = None, max_size:int=10):
+    def __init__(self, bag_dir: Path | None = None) -> None:
         self.tokens = []
-        self.max_size = max_size
         if bag_dir:
             self.bag_dir = Path(bag_dir)
 
