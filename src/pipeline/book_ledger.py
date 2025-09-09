@@ -1,7 +1,7 @@
 # book_ledger.py
 from datetime import datetime
 import csv
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from pathlib import Path
 import shutil
 
@@ -61,8 +61,8 @@ class BookLedger:
                 with self.csv_file.open('w') as f:
                     writer = csv.DictWriter(f, fieldnames=fieldnames)
                     writer.writeheader()
-                    for _,v in books.items():
-                        writer.writerow(v)
+                    for _,book in books.items():
+                        writer.writerow(asdict(book))
             else:
                 raise ValueError(f"no fieldnames")
      
@@ -74,10 +74,12 @@ class BookLedger:
         return self._books
 
 
-    def get_book(self, barcode):
-        book:Book | None = self.books.get(barcode)
+    def book(self, barcode) -> Book | None:
+        book = self.books.get(barcode)
         if book is not None:
             return book
+        else:
+            return None
         
 
     def set_book(self, barcode, book:Book):
@@ -85,7 +87,7 @@ class BookLedger:
 
 
     def choose_book(self, barcode):
-        book = self.get_book(barcode)
+        book = self.book(barcode)
         if book:
             book.status = 'chosen'
             book.date_chosen = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

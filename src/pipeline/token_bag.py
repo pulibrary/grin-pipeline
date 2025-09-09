@@ -9,11 +9,16 @@ from pipeline.plumbing  import Token, load_token, dump_token
     
 
 class TokenBag:
-    def __init__(self, bag_dir: str | None = None):
+    def __init__(self, bag_dir: Path | None = None, max_size:int=10):
         self.tokens = []
+        self.max_size = max_size
         if bag_dir:
             self.bag_dir = Path(bag_dir)
 
+
+    @property
+    def size(self) -> int:
+        return len(self.tokens)
 
     def set_bag_dir(self, path:Path):
         self.bag_dir = path

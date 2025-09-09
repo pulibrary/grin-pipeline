@@ -50,14 +50,14 @@ def test_choose_books(shared_datadir):
 
         stager = Stager(test_ledger_file, test_token_dir, processing_bucket)
         first_key = list(stager.ledger.books.keys())[0]
-        first_book:Book | None = stager.ledger.get_book(first_key)
+        first_book:Book | None = stager.ledger.book(first_key)
         assert first_book is not None and first_book.status is None
         assert len(stager.token_bag.tokens) == 2
         assert stager.token_bag.find(first_key) is None
 
         stager.choose_books(1)
 
-        first_book:Book | None = stager.ledger.get_book(first_key)
+        first_book:Book | None = stager.ledger.book(first_key)
         assert first_book is not None and first_book.status is 'chosen'
         assert stager.token_bag.find(first_key) is not None
 
