@@ -3,7 +3,8 @@ import logging
 import os
 from pathlib import Path
 from pipeline.config_loader import load_config
-from pipeline.token_bag_manager import BagManager
+from pipeline.secretary import Secretary
+
 from pipeline.book_ledger import BookLedger, Book
 from pipeline.token_bag import TokenBag
 from pipeline.plumbing import Token
@@ -18,23 +19,20 @@ logging.basicConfig(level=log_level)
 
 
 class Stager:
-    def __init__(self, path_to_ledger:Path,
-                 path_to_token_bag:Path,
-                 path_to_processing_bucket:Path) -> None:
-        self.ledger = BookLedger(path_to_ledger)
-        self.bag_manager = BagManager(TokenBag(path_to_token_bag),
-                                      BookLedger(path_to_ledger))
+    def __init__(self, secretary:Secretary, path_to_processing_bucket:Path) -> None:
+        self.secretary = secretary
         self.processing_bucket = path_to_processing_bucket
 
 
 
     def report(self):
-        chosen_books = self.ledger.all_chosen_books
+        chosen_books = self.secretary.all_chosen_books
+        count = len(chosen_books)
         print(f"number of chosen books:\t{len(chosen_books)}")
 
 
     def commit_changes(self):
-        self.bag_manager.commit()
+        self.secretary.commit()
 
 
     def choose_books(self, how_many:int):
@@ -42,7 +40,7 @@ class Stager:
         books_to_choose:list[Book] | None  = all_unprocessed_books[0:how_many]
         if books_to_choose:
             for book in books_to_choose:
-                self.bag_manager.choose_book(book.barcode)
+                self.secretary.choose_book(book.barcode)
 
 
     def stage(self):

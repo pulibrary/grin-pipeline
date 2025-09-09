@@ -32,13 +32,13 @@ class Book:
 class BookLedger:
     def __init__(self, csv_file):
         self.csv_file = Path(csv_file)
-        self._books = None
+        self._books: dict[str, Book] | None = None
         self._fieldnames = []
         self.chosen_books = []
         
             
 
-    def read_ledger(self):
+    def read_ledger(self) -> dict[str, Book]:
         books = {}
         with self.csv_file.open('r') as f:
             reader:csv.DictReader = csv.DictReader(f)
@@ -57,11 +57,10 @@ class BookLedger:
                 reader = csv.DictReader(f)
                 fieldnames = reader.fieldnames
             if fieldnames:
-                books = self.books
                 with self.csv_file.open('w') as f:
                     writer = csv.DictWriter(f, fieldnames=fieldnames)
                     writer.writeheader()
-                    for _,book in books.items():
+                    for _,book in self.books.items():
                         writer.writerow(asdict(book))
             else:
                 raise ValueError(f"no fieldnames")
@@ -98,16 +97,16 @@ class BookLedger:
             raise ValueError(f"book {barcode} not in ledger")
 
     @property
-    def all_chosen_books(self):
-        return [book for book in self.books if book.status == 'chosen']
+    def all_chosen_books(self) -> list[Book] | None:
+        books = [book for _,book in self.books.items() if book.status == 'chosen']
+        
         
 
     @property
-    def all_completed_books(self):
-        return [book for book in self.books if book.status == 'completed']
+    def all_completed_books(self) -> list[Book] | None:
+        books = [book for _,book in self.books.items() if book.status == 'completed']
 
 
     @property
-    def all_unprocessed_books(self):
-
+    def all_unprocessed_books(self) -> list[Book] | None:
         return [book for _,book in self.books.items() if book.status is None]

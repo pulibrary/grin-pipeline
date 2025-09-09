@@ -3,8 +3,8 @@ from pathlib import Path
 import tempfile
 import shutil
 from pipeline.book_ledger import BookLedger, Book
+from pipeline.secretary import Secretary
 from pipeline.token_bag import TokenBag
-from pipeline.plumbing import Token
 from pipeline.stager import Stager
 
 def test_stager_init(shared_datadir):
@@ -26,10 +26,14 @@ def test_stager_init(shared_datadir):
 
         processing_bucket = Path("/tmp")
 
-        stager = Stager(test_ledger_file, test_token_dir, processing_bucket)
+        secretary = Secretary(TokenBag(test_token_dir),
+                              BookLedger(test_ledger_file))
+                              
+
+        stager = Stager(secretary, processing_bucket)
 
         assert isinstance(stager.ledger, BookLedger)
-        assert isinstance(stager.token_bag, TokenBag)
+        assert isinstance(stager.secretary, Secretary)
         assert stager.processing_bucket == processing_bucket
         assert len(stager.ledger.books) == len(ledger_data)
 
@@ -48,18 +52,19 @@ def test_choose_books(shared_datadir):
 
         processing_bucket = Path("/tmp")
 
+                                         
         stager = Stager(test_ledger_file, test_token_dir, processing_bucket)
-        first_key = list(stager.ledger.books.keys())[0]
+
         first_book:Book | None = stager.ledger.book(first_key)
         assert first_book is not None and first_book.status is None
-        assert len(stager.token_bag.tokens) == 2
-        assert stager.token_bag.find(first_key) is None
+        assert stager.secretary.bag_size == 3
+        assert stager.secretary.find(first_key) is None
 
         stager.choose_books(1)
 
         first_book:Book | None = stager.ledger.book(first_key)
         assert first_book is not None and first_book.status is 'chosen'
-        assert stager.token_bag.find(first_key) is not None
+        assert stager.secretary.find(first_key) is not None
 
         
     

@@ -3,7 +3,7 @@ import tempfile
 import shutil
 from pipeline.book_ledger import BookLedger, Book
 from pipeline.token_bag import TokenBag
-from pipeline.token_bag_manager import BagManager
+from pipeline.secretary import Secretary
 
 
 
@@ -21,9 +21,9 @@ def test_token_bag_manager(shared_datadir):
         bag = TokenBag(test_token_dir)
         ledger = BookLedger(test_ledger_file)
 
-        manager = BagManager(bag, ledger)
+        secretary = Secretary(bag, ledger)
 
-        stats = manager.status()
+        stats = secretary.status()
         assert stats['bag_current_size'] == 2
 
         barcode  = list(ledger.books.keys())[0]
@@ -31,11 +31,11 @@ def test_token_bag_manager(shared_datadir):
         assert first_book is not None
         assert first_book.status is None
 
-        manager.choose_book(barcode)
+        secretary.choose_book(barcode)
 
         assert first_book.status == 'chosen'
 
-        manager.commit()
+        secretary.commit()
         new_bag = TokenBag(test_token_dir)
         new_bag.load()
         assert new_bag.size == 3
