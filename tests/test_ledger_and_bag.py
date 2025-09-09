@@ -29,7 +29,7 @@ def test_add_to_bag_from_ledger(shared_datadir):
 
         barcode = '32101078166681'
 
-        book:Book | None = ledger.book(barcode)
+        book:Book | None = ledger.entry(barcode)
         assert book is not None and book.status is None
 
         chosen_book:Book | None = ledger.choose_book(barcode)

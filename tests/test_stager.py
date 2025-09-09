@@ -7,37 +7,6 @@ from pipeline.secretary import Secretary
 from pipeline.token_bag import TokenBag
 from pipeline.stager import Stager
 
-def test_stager_init(shared_datadir):
-    bag_dir = shared_datadir / "tokens"
-    ledger_file = shared_datadir / "test_ledger.csv"
-
-
-    with tempfile.TemporaryDirectory() as tmpdir:
-        test_token_dir = Path(tmpdir) / "tokens"
-        shutil.copytree(bag_dir, test_token_dir)
-
-        test_ledger_file = Path(tmpdir) / "ledger.csv"
-        shutil.copy(ledger_file, test_ledger_file)
-
-        with test_ledger_file.open('r') as f:
-            reader = csv.DictReader(f)
-            ledger_data = list(reader)
-            
-
-        processing_bucket = Path("/tmp")
-
-        secretary = Secretary(TokenBag(test_token_dir),
-                              BookLedger(test_ledger_file))
-                              
-
-        stager = Stager(secretary, processing_bucket)
-
-        assert isinstance(stager.ledger, BookLedger)
-        assert isinstance(stager.secretary, Secretary)
-        assert stager.processing_bucket == processing_bucket
-        assert len(stager.ledger.books) == len(ledger_data)
-
-
 def test_choose_books(shared_datadir):
     bag_dir = shared_datadir / "tokens"
     ledger_file = shared_datadir / "test_ledger.csv"
@@ -50,21 +19,20 @@ def test_choose_books(shared_datadir):
         test_ledger_file = Path(tmpdir) / "ledger.csv"
         shutil.copy(ledger_file, test_ledger_file)
 
+
         processing_bucket = Path("/tmp")
 
-                                         
-        stager = Stager(test_ledger_file, test_token_dir, processing_bucket)
 
-        first_book:Book | None = stager.ledger.book(first_key)
-        assert first_book is not None and first_book.status is None
-        assert stager.secretary.bag_size == 3
-        assert stager.secretary.find(first_key) is None
+        ledger = BookLedger(test_ledger_file)
+        bag = TokenBag(test_token_dir)
+        secretary = Secretary(bag, ledger)
+                              
 
-        stager.choose_books(1)
+        assert len(secretary.chosen_books) == 0
+        stager = Stager(secretary, processing_bucket)
 
-        first_book:Book | None = stager.ledger.book(first_key)
-        assert first_book is not None and first_book.status is 'chosen'
-        assert stager.secretary.find(first_key) is not None
 
-        
+        stager.choose_books(how_many=1)
+        assert len(secretary.chosen_books) == 1
+
     

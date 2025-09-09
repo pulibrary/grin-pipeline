@@ -27,7 +27,7 @@ def test_token_bag_manager(shared_datadir):
         assert stats['bag_current_size'] == 2
 
         barcode  = list(ledger.books.keys())[0]
-        first_book = ledger.book(barcode)
+        first_book = ledger.entry(barcode)
         assert first_book is not None
         assert first_book.status is None
 
@@ -41,5 +41,5 @@ def test_token_bag_manager(shared_datadir):
         assert new_bag.size == 3
 
         new_ledger = BookLedger(test_ledger_file)
-        book = new_ledger.book(barcode)
+        book = new_ledger.entry(barcode)
         assert book is not None and book.status == 'chosen'

@@ -13,7 +13,7 @@ def test_book_ledger_book(shared_datadir):
 
     barcode = '32101078166681'
 
-    book:Book | None = ledger.book(barcode)
+    book:Book | None = ledger.entry(barcode)
     assert book is not None and book.status == None
     
 
@@ -23,7 +23,7 @@ def test_book_ledger_choose_book(shared_datadir):
 
     barcode = '32101078166681'
 
-    book:Book | None = ledger.book(barcode)
+    book:Book | None = ledger.entry(barcode)
     assert book is not None
     assert book.status is None
     

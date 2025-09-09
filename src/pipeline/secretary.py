@@ -25,10 +25,10 @@ class Secretary:
         return self.bag.find(barcode)
 
     def find_in_ledger(self, barcode) -> Book | None:
-        return self.ledger.book(barcode)
+        return self.ledger.entry(barcode)
 
     @property
-    def all_unprocessed_books(self) -> list[Book]:
+    def unprocessed_books(self) -> list[Book]:
         book_list = []
         books = self.ledger.all_unprocessed_books
         if books:
@@ -36,7 +36,7 @@ class Secretary:
         return book_list
 
     @property
-    def all_chosen_books(self) -> list[Book]:
+    def chosen_books(self) -> list[Book]:
         book_list = []
         books = self.ledger.all_chosen_books
         if books:
@@ -53,7 +53,7 @@ class Secretary:
 
 
     def choose_book(self, barcode:str) -> Book:
-        if self.ledger.book(barcode) is not  None:
+        if self.ledger.entry(barcode) is not  None:
             book:Book = self.ledger.choose_book(barcode)
             self.bag.add_book(book.barcode)
             return book

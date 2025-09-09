@@ -34,8 +34,6 @@ class BookLedger:
         self.csv_file = Path(csv_file)
         self._books: dict[str, Book] | None = None
         self._fieldnames = []
-        self.chosen_books = []
-        
             
 
     def read_ledger(self) -> dict[str, Book]:
@@ -65,6 +63,14 @@ class BookLedger:
             else:
                 raise ValueError(f"no fieldnames")
      
+    def refresh(self) -> None:
+        self.write_ledger()
+        self._books = self.read_ledger()
+
+
+    def entry(self, barcode) -> Book | None:
+        return self.books.get(barcode)
+
         
     @property
     def books(self):
@@ -73,38 +79,37 @@ class BookLedger:
         return self._books
 
 
-    def book(self, barcode) -> Book | None:
-        book = self.books.get(barcode)
-        if book is not None:
-            return book
-        else:
-            return None
+    # def book(self, barcode) -> Book | None:
+    #     book = self.books.get(barcode)
+    #     if book is not None:
+    #         return book
+    #     else:
+    #         return None
         
 
     def set_book(self, barcode, book:Book):
         self.books[barcode] = book
 
 
-    def choose_book(self, barcode):
-        book = self.book(barcode)
-        if book:
-            book.status = 'chosen'
-            book.date_chosen = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.chosen_books.append(book)
-            return book
+    def choose_book(self, barcode) -> Book:
+        entry:Book | None = self.entry(barcode)
+        if entry:
+            entry.status = 'chosen'
+            entry.date_chosen = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            return entry
 
         else:
             raise ValueError(f"book {barcode} not in ledger")
 
     @property
     def all_chosen_books(self) -> list[Book] | None:
-        books = [book for _,book in self.books.items() if book.status == 'chosen']
+        return [book for _,book in self.books.items() if book.status == 'chosen']
         
         
 
     @property
     def all_completed_books(self) -> list[Book] | None:
-        books = [book for _,book in self.books.items() if book.status == 'completed']
+        return [book for _,book in self.books.items() if book.status == 'completed']
 
 
     @property

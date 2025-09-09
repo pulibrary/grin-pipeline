@@ -11,8 +11,8 @@ def test_sizes(shared_datadir):
     secretary = Secretary(bag, ledger)
 
     assert secretary.bag_size == 2
-    assert len(secretary.all_unprocessed_books) == 9
-    assert len(secretary.all_chosen_books) == 0
+    assert len(secretary.unprocessed_books) == 9
+    assert len(secretary.chosen_books) == 0
 
 def test_choose_book(shared_datadir):
     bag_dir = shared_datadir / "tokens"

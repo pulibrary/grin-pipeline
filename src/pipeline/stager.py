@@ -25,19 +25,14 @@ class Stager:
 
 
 
-    def report(self):
-        chosen_books = self.secretary.all_chosen_books
-        count = len(chosen_books)
-        print(f"number of chosen books:\t{len(chosen_books)}")
-
 
     def commit_changes(self):
         self.secretary.commit()
 
 
     def choose_books(self, how_many:int):
-        all_unprocessed_books = self.ledger.all_unprocessed_books
-        books_to_choose:list[Book] | None  = all_unprocessed_books[0:how_many]
+        unprocessed_books = self.secretary.unprocessed_books
+        books_to_choose:list[Book] | None  = unprocessed_books[0:how_many]
         if books_to_choose:
             for book in books_to_choose:
                 self.secretary.choose_book(book.barcode)
