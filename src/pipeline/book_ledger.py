@@ -102,16 +102,16 @@ class BookLedger:
             raise ValueError(f"book {barcode} not in ledger")
 
     @property
-    def all_chosen_books(self) -> list[Book] | None:
+    def all_chosen_books(self) -> list[Book]:
         return [book for _,book in self.books.items() if book.status == 'chosen']
         
         
 
     @property
-    def all_completed_books(self) -> list[Book] | None:
+    def all_completed_books(self) -> list[Book]:
         return [book for _,book in self.books.items() if book.status == 'completed']
 
 
     @property
-    def all_unprocessed_books(self) -> list[Book] | None:
+    def all_unprocessed_books(self) -> list[Book]:
         return [book for _,book in self.books.items() if book.status is None]

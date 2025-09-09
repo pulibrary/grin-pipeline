@@ -25,11 +25,6 @@ class Stager:
 
 
 
-
-    def commit_changes(self):
-        self.secretary.commit()
-
-
     def choose_books(self, how_many:int):
         unprocessed_books = self.secretary.unprocessed_books
         books_to_choose:list[Book] | None  = unprocessed_books[0:how_many]
@@ -38,10 +33,14 @@ class Stager:
                 self.secretary.choose_book(book.barcode)
 
 
-    def stage(self):
+    def update_tokens(self):
         """Fills the token bag. Sets the processing directory
         in the tokens.
         """
         bag = self.secretary.bag
         for token in bag.tokens:
-            token.put_prop("processing_bucket", self.processing_bucket)
+            token.put_prop("processing_bucket", str(self.processing_bucket))
+        
+
+    def stage(self):
+        self.secretary.commit()
