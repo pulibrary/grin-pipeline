@@ -42,4 +42,6 @@ class Stager:
         """Fills the token bag. Sets the processing directory
         in the tokens.
         """
-        pass
+        bag = self.secretary.bag
+        for token in bag.tokens:
+            token.put_prop("processing_bucket", self.processing_bucket)
