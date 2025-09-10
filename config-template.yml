@@ -42,7 +42,7 @@ filters:
   - name: decryptor
     class: Decryptor
     script: src/pipeline/filters/decryptor.py
-    decryption_passphrase: tug hoe moll sew leer milt you bank word lip swat watt
+    decryption_passphrase: phrase here
     pipe:
         in: downloaded
         out: decrypted
