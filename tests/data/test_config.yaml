@@ -1,0 +1,8 @@
+filters:
+  - name: the_mover
+    class: Mover
+    script: filters/mover.py
+    input_pipe: /tmp/pipeline/01_incoming
+    output_pipe: /tmp/pipeline/02_decrypted
+    source_dir: /tmp/pipeline/data/input
+    target_dir: /tmp/pipeline/data/output

@@ -1,0 +1,7 @@
+{
+    "barcode" : "234",
+    "buckets" : {
+	"downloaded" : "/tmp/pipeline/data/downloaded",
+	"decrypted" : "/tmp/pipeline/data/decrypted"
+    }
+}

@@ -14,7 +14,7 @@ pdm.lock
 # Config and temp files
 .env
 config.yml
-data/
+# data/
 *.tmp
 *.log
 *.bak

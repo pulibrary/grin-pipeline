@@ -1,0 +1,5 @@
+{
+    "barcode" : "345",
+    "source_file" : "/tmp/test_data/source/test-file.txt",
+    "destination_file" : "/tmp/test_data/destination/test-file.txt"
+}
