@@ -3,22 +3,35 @@ global:
   poll_interval: 5
   object_service: aws
   object_store: google-books-dev
+  processing_bucket: /var/tmp/grin/processing
+  finished_bucket: /var/tmp/grin/finished
+  ledger_file: /var/tmp/grin/ledger.csv
+  token_bag: /var/tmp/grin/token_bag
 
 buckets:
+  - name: start
+    path: /var/tmp/grin/pipeline/start
   - name: requested
-    path: /var/tmp/pipeline/requested
+    path: /var/tmp/grin/pipeline/requested
   - name: converted
-    path: /var/tmp/pipeline/converted
+    path: /var/tmp/grin/pipeline/converted
   - name: downloaded
-    path: /var/tmp/pipeline/downloaded
+    path: /var/tmp/grin/pipeline/downloaded
   - name: decrypted
-    path: /var/tmp/pipeline/decrypted
+    path: /var/tmp/grin/pipeline/decrypted
   - name: stored
-    path: /var/tmp/pipeline/stored
+    path: /var/tmp/grin/pipeline/stored
   - name: done
-    path: /var/tmp/pipeline/done
+    path: /var/tmp/grin/pipeline/done
 
 filters:
+  - name: requester
+    class: Requester
+    script: src/pipeline/filters/requester.py
+    grin_qps: 5
+    pipe:
+        in: start
+        out: requested
   - name: downloader
     class: Downloader
     script: src/pipeline/filters/downloader.py
@@ -29,7 +42,7 @@ filters:
   - name: decryptor
     class: Decryptor
     script: src/pipeline/filters/decryptor.py
-    decryption_passphrase: phrase goes here
+    decryption_passphrase: tug hoe moll sew leer milt you bank word lip swat watt
     pipe:
         in: downloaded
         out: decrypted
@@ -45,3 +58,7 @@ filters:
     pipe:
         in: stored
         out: done
+
+processes:
+   - name: orchestrator
+     script: src/pipeline/orchestrator.py
