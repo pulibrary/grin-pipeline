@@ -127,6 +127,18 @@ class Pipe:
             self.delete_marked_token()
             self.token = None
 
+    def put_token_back(self, errorFlg: bool = False) -> None:
+        if self.token:
+            if errorFlg:
+                out_path = self.token_error_path
+            else:
+                out_path = self.input
+                
+            dump_token(self.token, out_path)
+
+            self.delete_marked_token()
+            self.token = None
+
 
 class Filter:
     def __init__(self, pipe: Pipe):
@@ -191,9 +203,16 @@ class Pipeline:
     def add_bucket(self, name:str, location:Path):
         self.buckets[name] = location
 
-    def bucket(self, name:str):
-        return self.buckets.get(name)
+    def bucket(self, name:str) -> Path:
+        if p := self.buckets.get(name):
+            return p
+        else:
+            raise ValueError(f"no such bucket: {name}")
+
 
     def pipe(self, in_bucket:str, out_bucket:str):
+        return Pipe(self.bucket(in_bucket), self.bucket(out_bucket))
+
+    def pipe_old(self, in_bucket:str, out_bucket:str):
         return Pipe(Path(in_bucket), Path(out_bucket))
     
