@@ -192,8 +192,8 @@ class Filter:
         raise NotImplementedError("Subclasses must implement this")
 
 class Pipeline:
-    def __init__(self, config_file:str):
-        self.config = load_config(config_file)
+    def __init__(self, config:dict):
+        self.config = config
         self.buckets = {}
         for rec in self.config.get("buckets", {}):
             name = rec.get("name", "")
@@ -212,7 +212,3 @@ class Pipeline:
 
     def pipe(self, in_bucket:str, out_bucket:str):
         return Pipe(self.bucket(in_bucket), self.bucket(out_bucket))
-
-    def pipe_old(self, in_bucket:str, out_bucket:str):
-        return Pipe(Path(in_bucket), Path(out_bucket))
-    

@@ -20,7 +20,7 @@ logging.basicConfig(level=log_level)
 class Orchestrator:
     def __init__(self) -> None:
         self.processes = []
-        self.pipeline = Pipeline(config_path)
+        self.pipeline = Pipeline(config)
 
     def start_filters(self):
         for filt in config.get("filters", []):

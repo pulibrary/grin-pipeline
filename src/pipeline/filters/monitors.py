@@ -100,7 +100,8 @@ class RequestMonitor(Monitor):
 
 if __name__ == "__main__":
     config_path: str = os.environ.get("PIPELINE_CONFIG", "config.yml")
+    config: dict = load_config(config_path)
 
-    monitor = Monitor(Pipeline(config_path))
+    monitor = Monitor(Pipeline(config))
     
     
