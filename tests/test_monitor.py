@@ -75,3 +75,5 @@ def test_setup():
     assert barcode2 not in requested_files
     assert barcode1 not in converted_files
     assert barcode2 in converted_files
+
+    shutil.rmtree(tmpdir)
