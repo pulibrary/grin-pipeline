@@ -1,8 +1,64 @@
+global:
+  log_level: INFO
+  poll_interval: 5
+  object_service: aws
+  object_store: google-books-dev
+  processing_bucket: /var/tmp/grin/processing
+  finished_bucket: /var/tmp/grin/finished
+  ledger_file: /var/tmp/grin/ledger.csv
+  token_bag: /var/tmp/grin/token_bag
+
+buckets:
+  - name: start
+    path: /var/tmp/grin/pipeline/start
+  - name: requested
+    path: /var/tmp/grin/pipeline/requested
+  - name: converted
+    path: /var/tmp/grin/pipeline/converted
+  - name: downloaded
+    path: /var/tmp/grin/pipeline/downloaded
+  - name: decrypted
+    path: /var/tmp/grin/pipeline/decrypted
+  - name: stored
+    path: /var/tmp/grin/pipeline/stored
+  - name: done
+    path: /var/tmp/grin/pipeline/done
+
 filters:
-  - name: the_mover
-    class: Mover
-    script: filters/mover.py
-    input_pipe: /tmp/pipeline/01_incoming
-    output_pipe: /tmp/pipeline/02_decrypted
-    source_dir: /tmp/pipeline/data/input
-    target_dir: /tmp/pipeline/data/output
+  - name: requester
+    class: Requester
+    script: src/pipeline/filters/requester.py
+    grin_qps: 5
+    pipe:
+        in: start
+        out: requested
+  - name: downloader
+    class: Downloader
+    script: src/pipeline/filters/downloader.py
+    grin_qps: 5
+    pipe:
+        in: converted
+        out: downloaded
+  - name: decryptor
+    class: Decryptor
+    script: src/pipeline/filters/decryptor.py
+    decryption_passphrase: put phrase here
+    pipe:
+        in: downloaded
+        out: decrypted
+  - name: uploader
+    class: Uploader
+    script: src/pipeline/filters/uploader.py
+    pipe:
+        in: decrypted
+        out: stored
+  - name: cleaner
+    class: Cleaner
+    script: src/pipeline/filters/cleaner.py
+    pipe:
+        in: stored
+        out: done
+
+processes:
+   - name: orchestrator
+     script: src/pipeline/orchestrator.py
