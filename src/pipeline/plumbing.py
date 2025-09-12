@@ -212,3 +212,16 @@ class Pipeline:
 
     def pipe(self, in_bucket:str, out_bucket:str):
         return Pipe(self.bucket(in_bucket), self.bucket(out_bucket))
+
+
+    @property
+    def snapshot(self):
+        buckets = []
+        for name, location in self.buckets.items():
+            info = { 'name' : name,
+                     'waiting_tokens' : [f.name for f in Path(location).glob('*.json')],
+                     'errored_tokens' : [f.name for f in Path(location).glob('*.err')],
+                     'in_process_tokens' : [f.name for f in Path(location).glob('*.bak')]
+            }
+            buckets.append(info)
+        return buckets

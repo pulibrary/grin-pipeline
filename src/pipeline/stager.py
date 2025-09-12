@@ -1,5 +1,6 @@
 # stager.py
 from pathlib import Path
+from pipeline.book_ledger import Book
 from pipeline.secretary import Secretary
 
 
@@ -13,14 +14,14 @@ class Stager:
 
 
 
-    def choose_books(self, how_many:int):
-        unprocessed_books = self.secretary.unprocessed_books
-        if how_many > len(unprocessed_books):
-            how_many = len(unprocessed_books)
-        books_to_choose:list[Book] | None  = unprocessed_books[0:how_many]
-        if books_to_choose:
-            for book in books_to_choose:
-                self.secretary.choose_book(book.barcode)
+    # def choose_books(self, how_many:int):
+    #     unprocessed_books = self.secretary.unprocessed_books
+    #     if how_many > len(unprocessed_books):
+    #         how_many = len(unprocessed_books)
+    #     books_to_choose:list[Book] | None  = unprocessed_books[0:how_many]
+    #     if books_to_choose:
+    #         for book in books_to_choose:
+    #             self.secretary.choose_book(book.barcode)
 
 
     def update_tokens(self):

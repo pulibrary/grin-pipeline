@@ -4,9 +4,56 @@ import logging
 import signal
 import subprocess
 from pathlib import Path
+from pipeline.plumbing import Pipeline
+from pipeline.token_bag import TokenBag
+from pipeline.book_ledger import BookLedger, Book
+from pipeline.stager import Stager
+from pipeline.secretary import Secretary
+from prime_batch import Primer
+from pipeline.config_loader import load_config
+
 
 
 class Manager:
+    def __init__(self, config:dict):
+        self.config = config
+        self.ledger = BookLedger(config['global']['ledger_file'])
+        self.token_bag = TokenBag(config['global']['token_bag'])
+        self.secretary = Secretary(self.token_bag, self.ledger)
+        processing_bucket = Path(config['global']['processing_bucket'])
+        start_bucket = Path([bucket['path'] for bucket in self.config['buckets'] if bucket['name'] == 'start'][0])        
+        self.stager = Stager(self.secretary, processing_bucket, start_bucket)
+        self.pipeline = Pipeline(config)
+
+
+    @property
+    def pipeline_status(self):
+        return self.pipeline.snapshot
+            
+    @property
+    def ledger_status(self):
+        return { 'chosen' : self.secretary.chosen_books }
+                
+    @property
+    def token_bag_status(self):
+        return self.secretary.bag_size
+
+
+    def fill_token_bag(self, how_many:int=20):
+        self.secretary.choose_books(how_many)
+        self.secretary.commit()
+
+    def stage(self):
+        self.stager.update_tokens()
+        self.stager.stage()
+
+
+    def prime_pipeline(self, how_many:int=20) -> None:
+        primer = Primer(self.config)
+        primer.prime()
+
+
+class ManagerOld:
     def __init__(self, path_to_config:str) -> None:
         self.config_file = Path(path_to_config)
         self.config: dict = load_config(config_path)

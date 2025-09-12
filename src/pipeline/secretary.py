@@ -61,6 +61,17 @@ class Secretary:
         else:
             raise KeyError(f"{barcode} not in ledger")
 
+    def choose_books(self, how_many:int):
+        unprocessed_books = self.unprocessed_books
+        if how_many > len(unprocessed_books):
+            how_many = len(unprocessed_books)
+        books_to_choose:list[Book] | None  = unprocessed_books[0:how_many]
+        if books_to_choose:
+            for book in books_to_choose:
+                self.choose_book(book.barcode)
+
+
+
 
     def pour_bag(self, bucket:Path):
         self.bag.pour_into(bucket)
