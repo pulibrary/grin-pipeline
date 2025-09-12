@@ -22,6 +22,10 @@ def test_choose_books(shared_datadir):
 
         processing_bucket = Path("/tmp")
 
+        start_bucket = Path(tmpdir) / "start"
+        start_bucket.mkdir()
+        
+
 
         ledger = BookLedger(test_ledger_file)
         bag = TokenBag(test_token_dir)
@@ -31,7 +35,7 @@ def test_choose_books(shared_datadir):
                               
 
         assert len(secretary.chosen_books) == 0
-        stager = Stager(secretary, processing_bucket)
+        stager = Stager(secretary, processing_bucket, start_bucket)
 
 
         stager.choose_books(how_many=1)
@@ -54,11 +58,15 @@ def test_update_tokens(shared_datadir):
 
         processing_bucket = Path("/tmp")
 
+        start_bucket = Path(tmpdir) / "start"
+        start_bucket.mkdir()
+        
+
         ledger = BookLedger(test_ledger_file)
         bag = TokenBag(test_token_dir)
         secretary = Secretary(bag, ledger)
 
-        stager = Stager(secretary, processing_bucket)
+        stager = Stager(secretary, processing_bucket, start_bucket)
 
         stager.choose_books(how_many=3)
         assert all([tok.get_prop('processing_bucket') is None for tok in bag.tokens])
@@ -80,11 +88,15 @@ def test_staging(shared_datadir):
 
         processing_bucket = Path("/tmp")
 
+        start_bucket = Path(tmpdir) / "start"
+        start_bucket.mkdir()
+        
+
         ledger = BookLedger(test_ledger_file)
         bag = TokenBag(test_token_dir)
         secretary = Secretary(bag, ledger)
 
-        stager = Stager(secretary, processing_bucket)
+        stager = Stager(secretary, processing_bucket, start_bucket)
 
         stager.choose_books(how_many=3)
         assert all([tok.get_prop('processing_bucket') is None for tok in bag.tokens])
@@ -95,5 +107,5 @@ def test_staging(shared_datadir):
         ledger = BookLedger(test_ledger_file)
         bag = TokenBag(test_token_dir)
         secretary = Secretary(bag, ledger)
-        stager = Stager(secretary, processing_bucket)
+        stager = Stager(secretary, processing_bucket, start_bucket)
         assert all([tok.get_prop('processing_bucket') == str(processing_bucket) for tok in bag.tokens])

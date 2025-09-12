@@ -1,3 +1,4 @@
+from pathlib import Path
 import os
 from pipeline.secretary import Secretary
 from pipeline.token_bag import TokenBag
@@ -20,15 +21,12 @@ class Primer:
         ledger = BookLedger(config['global']['ledger_file'])
         token_bag = TokenBag(config['global']['token_bag'])
         processing_bucket = config['global']['processing_bucket']
-        self.start_bucket_path = [bucket['path'] for bucket in self.config['buckets'] if bucket['name'] == 'start'][0]
+        self.start_bucket = Path([bucket['path'] for bucket in self.config['buckets'] if bucket['name'] == 'start'][0])
         self.secretary = Secretary(token_bag, ledger)
-        self.stager = Stager(self.secretary, processing_bucket, self.start_bucket_path)
+        self.stager = Stager(self.secretary, processing_bucket, self.start_bucket)
 
 
-    def prime_start_bucket(self):
-        pass
-
-    def stage(self, how_many:int=20) -> None:
+    def prime(self, how_many:int=20) -> None:
         self.stager.choose_books(how_many)
         self.stager.update_tokens()
         self.stager.stage()
@@ -45,8 +43,3 @@ if __name__ == "__main__":
     config:dict = load_config(args.config)
     primer = Primer(config)
     primer.prime(args.howmany)
-
-    
-
-
-

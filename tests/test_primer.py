@@ -32,6 +32,8 @@ def test_primer(shared_datadir):
     config['buckets'] =[{'name' : 'start', 'path' : start_bucket}]
 
     primer:Primer = Primer(config)
-    breakpoint()
-    secretary = primer.secretary
-
+    assert len(list(start_bucket.glob("*.json"))) == 0
+    primer.prime(2)
+    assert len(list(start_bucket.glob("*.json"))) == 2
+    
+    
