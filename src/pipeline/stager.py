@@ -1,21 +1,6 @@
 # stager.py
-import logging
-import os
 from pathlib import Path
-from pipeline.config_loader import load_config
 from pipeline.secretary import Secretary
-
-from pipeline.book_ledger import BookLedger, Book
-from pipeline.token_bag import TokenBag
-from pipeline.plumbing import Token
-
-# config_path: str = os.environ.get("PIPELINE_CONFIG", "config.yml")
-# config: dict = load_config(config_path)
-
-# # Set up logging
-# log_level = getattr(logging, config.get("global", {}).get("log_level", "INFO").upper())
-
-# logging.basicConfig(level=log_level)
 
 
 class Stager:
