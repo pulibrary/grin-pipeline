@@ -72,3 +72,12 @@ class TokenBag:
         if update_tokens is True:
             for token in self.tokens:
                 token.put_prop('processing_bucket', directory)
+
+
+    def pour_into(self, bucket:Path) -> None:
+        barcodes = [tok.get_prop('barcode') for tok in self.tokens]
+        for barcode in barcodes:
+            token = self.take_token(barcode)
+            dump_token(token, bucket)
+            
+        

@@ -123,3 +123,17 @@ def test_assign_processing_bucket(shared_datadir):
     assert tok is not None
     assert tok.get_prop('processing_bucket') == fake_processing_bucket
     
+def test_pour_into(shared_datadir):
+    with tempfile.TemporaryDirectory() as tmpdir:
+        bag_dir = shared_datadir / "tokens"
+        test_bag_dir = Path(tmpdir) / "tokens"
+        shutil.copytree(bag_dir, test_bag_dir)
+        bucket = Path(tmpdir) / "bucket"
+        bucket.mkdir()
+        
+        bag = TokenBag(test_bag_dir)
+        bag.load()
+        assert len(bag.tokens) == 2
+        assert len(list(bucket.glob("*.json"))) == 0
+        bag.pour_into(bucket)
+        assert len(list(bucket.glob("*.json"))) == 2

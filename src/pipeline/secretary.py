@@ -1,3 +1,4 @@
+from pathlib import Path
 from pipeline.token_bag import TokenBag
 from pipeline.book_ledger import BookLedger, Book
 from pipeline.plumbing  import Token
@@ -60,7 +61,10 @@ class Secretary:
         else:
             raise KeyError(f"{barcode} not in ledger")
 
-        
+
+    def pour_bag(self, bucket:Path):
+        self.bag.pour_into(bucket)
+
             
     def commit(self) -> None:
         self.ledger.write_ledger()

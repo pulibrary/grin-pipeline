@@ -9,24 +9,29 @@ from pipeline.book_ledger import BookLedger, Book
 from pipeline.token_bag import TokenBag
 from pipeline.plumbing import Token
 
-config_path: str = os.environ.get("PIPELINE_CONFIG", "config.yml")
-config: dict = load_config(config_path)
+# config_path: str = os.environ.get("PIPELINE_CONFIG", "config.yml")
+# config: dict = load_config(config_path)
 
-# Set up logging
-log_level = getattr(logging, config.get("global", {}).get("log_level", "INFO").upper())
+# # Set up logging
+# log_level = getattr(logging, config.get("global", {}).get("log_level", "INFO").upper())
 
-logging.basicConfig(level=log_level)
+# logging.basicConfig(level=log_level)
 
 
 class Stager:
-    def __init__(self, secretary:Secretary, path_to_processing_bucket:Path) -> None:
+    def __init__(self, secretary:Secretary,
+                 path_to_processing_bucket:Path,
+                 path_to_start_bucket:Path) -> None:
         self.secretary = secretary
         self.processing_bucket = path_to_processing_bucket
+        self.start_bucket = path_to_start_bucket
 
 
 
     def choose_books(self, how_many:int):
         unprocessed_books = self.secretary.unprocessed_books
+        if how_many > len(unprocessed_books):
+            how_many = len(unprocessed_books)
         books_to_choose:list[Book] | None  = unprocessed_books[0:how_many]
         if books_to_choose:
             for book in books_to_choose:
@@ -43,4 +48,6 @@ class Stager:
         
 
     def stage(self):
+        self.secretary.pour_bag(self.start_bucket)
         self.secretary.commit()
+
