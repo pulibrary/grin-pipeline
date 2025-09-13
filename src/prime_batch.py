@@ -26,10 +26,9 @@ class Primer:
         self.stager = Stager(self.secretary, processing_bucket, self.start_bucket)
 
 
-    def prime(self, how_many:int=20) -> None:
-        self.secretary.choose_books(how_many)
-        self.stager.update_tokens()
-        self.stager.stage()
+    def prime(self):
+        pass
+
 
 
 if __name__ == "__main__":

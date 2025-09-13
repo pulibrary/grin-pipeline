@@ -9,7 +9,7 @@ from pipeline.token_bag import TokenBag
 from pipeline.book_ledger import BookLedger, Book
 from pipeline.stager import Stager
 from pipeline.secretary import Secretary
-from prime_batch import Primer
+# from prime_batch import Primer
 from pipeline.config_loader import load_config
 
 
@@ -48,9 +48,9 @@ class Manager:
         self.stager.stage()
 
 
-    def prime_pipeline(self, how_many:int=20) -> None:
-        primer = Primer(self.config)
-        primer.prime()
+    # def prime_pipeline(self, how_many:int=20) -> None:
+    #     primer = Primer(self.config)
+    #     primer.prime()
 
 
 class ManagerOld:

@@ -33,7 +33,7 @@ def test_primer(shared_datadir):
 
     primer:Primer = Primer(config)
     assert len(list(start_bucket.glob("*.json"))) == 0
-    primer.prime(2)
+    primer.prime
     assert len(list(start_bucket.glob("*.json"))) == 2
     
     

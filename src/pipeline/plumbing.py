@@ -216,12 +216,11 @@ class Pipeline:
 
     @property
     def snapshot(self):
-        buckets = []
+        buckets = {}
         for name, location in self.buckets.items():
-            info = { 'name' : name,
-                     'waiting_tokens' : [f.name for f in Path(location).glob('*.json')],
+            info = { 'waiting_tokens' : [f.name for f in Path(location).glob('*.json')],
                      'errored_tokens' : [f.name for f in Path(location).glob('*.err')],
                      'in_process_tokens' : [f.name for f in Path(location).glob('*.bak')]
             }
-            buckets.append(info)
+            buckets[name] = info
         return buckets
