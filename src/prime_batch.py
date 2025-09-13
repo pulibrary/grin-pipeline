@@ -27,7 +27,7 @@ class Primer:
 
 
     def prime(self, how_many:int=20) -> None:
-        self.stager.choose_books(how_many)
+        self.secretary.choose_books(how_many)
         self.stager.update_tokens()
         self.stager.stage()
 

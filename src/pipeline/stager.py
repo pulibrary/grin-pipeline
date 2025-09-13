@@ -33,7 +33,8 @@ class Stager:
             token.put_prop("processing_bucket", str(self.processing_bucket))
         
 
-    def stage(self):
+    def stage(self, commit:bool=True):
         self.secretary.pour_bag(self.start_bucket)
-        self.secretary.commit()
+        if commit:
+            self.secretary.commit()
 
