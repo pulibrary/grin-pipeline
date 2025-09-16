@@ -2,16 +2,15 @@ import sys
 import os
 import logging
 import signal
-import subprocess
 from pathlib import Path
 from pipeline.plumbing import Pipeline
 from pipeline.token_bag import TokenBag
 from pipeline.book_ledger import BookLedger
 from pipeline.stager import Stager
 from pipeline.secretary import Secretary
-# from prime_batch import Primer
 from pipeline.config_loader import load_config
-
+from pipeline.filters.monitors import RequestMonitor
+from pipeline.synchronizer import Synchronizer
 
 
 class Manager:
@@ -24,7 +23,19 @@ class Manager:
         start_bucket = Path([bucket['path'] for bucket in self.config['buckets'] if bucket['name'] == 'start'][0])        
         self.stager = Stager(self.secretary, processing_bucket, start_bucket)
         self.pipeline = Pipeline(config)
+        self.request_monitor = RequestMonitor(self.pipeline)
+        self.synchronizer = Synchronizer(config)
         self.processes = []
+        self.commands = {
+            "exit": {"help" : "exit manager", 'fn': self._exit_command},
+            "pipeline status": {'help': 'print pipeline status', 'fn': lambda: print(self.pipeline_status)},
+            "ledger status": {"help" : "print ledger status", "fn" : lambda: print(self.ledger_status)},
+            "token bag status" : {"help" : "print token bag status", "fn" : lambda: print(self.token_bag_status)},
+            "fill token bag" : {"help" : "fill token bag with tokens", "fn" : self._fill_token_bag_command},
+            "synchronize" : {"help" : "sync GRIN converted with pipeline", "fn" : self_synchronize_command),
+            "request monitor" : {"help": "request monitor dry run", "fn": lambda: self.request_monitor.dry_run},
+            "help" : {"help" : "show commands", "fn": self._help_command}
+        }
 
 
     @property
@@ -50,107 +61,43 @@ class Manager:
 
 
     def repl(self):
-        print("\nManager REPL. Type 'help' for commands.")
         while True:
-            try:
-                cmd = input("manager> ").strip()
-                if cmd == "exit":
-                    print("\nExiting Manager.")
+            cmd = input("manager> ").strip()
+            if cmd in self.commands:
+                if self.commands[cmd]['fn']():
                     break
-                elif cmd == "pipeline status":
-                    print(self.pipeline_status)
-                elif cmd == "ledger_status":
-                    print(self.ledger_status)
-                elif cmd == "token bag status":
-                    print(self.token_bag_status)
-                elif cmd == "fill token bag":
-                    self.fill_token_bag()
-                    print(self.token_bag)
-                
-                
-            except (KeyboardInterrupt, EOFError):
+            else:
+                print(f"Unknown command: {cmd}")
+
+
+    def _exit_command(self):
                 print("\nExiting Manager.")
-                break
-                
-    def run(self):
-        def shutdown_handler(signum, frame):
-            print("\nShutting down Manager...")
-            # do other things
-            sys.exit(0)
+                return True     # Signal to exit
 
-        signal.signal(signal.SIGINT, shutdown_handler)
-        signal.signal(signal.SIGTERM, shutdown_handler)
-
-        self.repl()
-    
+    def _fill_token_bag_command(self):
+        self.fill_token_bag()
+        print(self.token_bag_status)
+        return False            # Don't exit
 
 
+    def _help_command(self):
+        for k,v in self.commands.items():
+            print(f"{k}: {v.get('help')}")
+        return False
 
-class ManagerOld:
-    def __init__(self, path_to_config:str) -> None:
-        self.config_file = Path(path_to_config)
-        self.config: dict = load_config(config_path)
-        self.processes = []
+    def _request_monitor_command(self):
+            pass
 
-    def start_process(self, process):
-        extra_env = {}
-        cmd = [
-            sys.executable,
-            process["script"],
-            "--config",
-            self.config_file
-        ]
-        logging.info(f"Starting process: {cmd}")
-        proc = subprocess.Popen(cmd, env={**os.environ, **extra_env})
-        self.processes.append((process["name"], proc))
+
+    def _synchronize_command(self):
+        synced = self.synchronizer.synchronize()
+        print(f"Number of files synchronized: {len(synced)}")
+        return False
         
-
-    def stop_processes(self):
-        for name, proc in self.processes:
-            logging.info(f"Stopping process: {name}")
-            proc.terminate()
-            try:
-                proc.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                proc.kill()
-        self.processes.clear()
-
-
-
-    def get_process(self, process_name):
-        processes = self.config.get('processes', [])
-        hits = [proc for proc in processes if proc.get('name') == process_name]
-        if hits:
-            return hits[0]
-        else:
-            return None
-
-    def repl(self):
-        print("\nManager REPL. Type 'help' for commands.")
-        while True:
-            try:
-                cmd = input("manager> ").strip()
-                if cmd == "exit":
-                    print("Exiting manager.")
-                    self.stop_processes()
-                    break
-                elif cmd == "help":
-                    print("Available commands: exit, orchestrator start")
-                elif cmd == "orchestrator start":
-                    proc = self.get_process('orchestrator')
-                    self.start_process(proc)
-                elif cmd == "orchestrator stop":
-                    pass
-                else:
-                    print(f"Unknown command: {cmd}")
-            except (KeyboardInterrupt, EOFError):
-                print("\nExiting Manager.")
-                self.stop_processes()
-                break
             
+
+
                 
-
-
     def run(self):
         def shutdown_handler(signum, frame):
             print("\nShutting down Manager...")
@@ -162,6 +109,7 @@ class ManagerOld:
 
         self.repl()
     
+
 
 
 if __name__ == "__main__":
