@@ -4,7 +4,6 @@ from datetime import datetime, timezone
 from time import sleep
 import logging
 from typing import Optional
-from pipeline.config_loader import load_config
 
 logger: logging.Logger = logging.getLogger(__name__)
 

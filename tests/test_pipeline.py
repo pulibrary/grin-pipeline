@@ -1,6 +1,6 @@
 from pathlib import Path
 import pytest
-from pipeline.plumbing import Pipeline, Pipe
+from pipeline.plumbing import Pipeline
 from pipeline.config_loader import load_config
 
 

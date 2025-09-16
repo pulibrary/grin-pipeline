@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 from pipeline.plumbing import Pipeline
 from pipeline.token_bag import TokenBag
-from pipeline.book_ledger import BookLedger, Book
+from pipeline.book_ledger import BookLedger
 from pipeline.stager import Stager
 from pipeline.secretary import Secretary
 # from prime_batch import Primer

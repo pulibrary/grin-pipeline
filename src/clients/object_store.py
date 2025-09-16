@@ -28,7 +28,7 @@ class S3Client(ObjectStore):
                 Key=key,
                 ObjectAttributes=['ETag'])
             return True
-        except self.client.exceptions.NoSuchKey as e:
+        except self.client.exceptions.NoSuchKey:
             return False
 
 

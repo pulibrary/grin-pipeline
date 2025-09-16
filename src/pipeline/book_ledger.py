@@ -61,7 +61,7 @@ class BookLedger:
                     for _,book in self.books.items():
                         writer.writerow(asdict(book))
             else:
-                raise ValueError(f"no fieldnames")
+                raise ValueError("no fieldnames")
      
     def refresh(self) -> None:
         self.write_ledger()

@@ -2,8 +2,6 @@ from pathlib import Path
 import shutil
 
 from pipeline.manager import Manager
-from pipeline.token_bag import TokenBag
-from pipeline.book_ledger import BookLedger
 
 def test_manager(shared_datadir):
     tmpdir = Path("/tmp/test_manager")

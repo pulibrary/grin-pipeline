@@ -1,4 +1,4 @@
-from pipeline.plumbing import Token,load_token, dump_token
+from pipeline.plumbing import Token,load_token
 
 
 def test_load_token(shared_datadir):

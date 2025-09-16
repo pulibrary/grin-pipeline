@@ -1,7 +1,7 @@
 from pathlib import Path
 import tempfile
 import shutil
-from pipeline.book_ledger import BookLedger, Book
+from pipeline.book_ledger import BookLedger
 from pipeline.token_bag import TokenBag
 from pipeline.secretary import Secretary
 

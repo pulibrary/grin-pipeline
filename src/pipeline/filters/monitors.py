@@ -1,9 +1,7 @@
 import os
-import sys
 import logging
-from pathlib import Path
 from pipeline.config_loader import load_config
-from pipeline.plumbing import Pipeline, Pipe, Token, load_token, dump_token
+from pipeline.plumbing import Pipeline, Token, load_token, dump_token
 from clients import GrinClient
 
 

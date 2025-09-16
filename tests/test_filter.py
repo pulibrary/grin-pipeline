@@ -1,6 +1,5 @@
 from pathlib import Path
-import json
-from pipeline.plumbing import Filter, Pipe, Token, load_token, dump_token
+from pipeline.plumbing import Filter, Pipe, Token, dump_token
 
 
 inpath = Path("/tmp/test_pipeline_filter/in")

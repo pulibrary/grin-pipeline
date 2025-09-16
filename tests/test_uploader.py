@@ -1,10 +1,7 @@
 from pathlib import Path
-import pytest
-from unittest.mock import patch, MagicMock
-import json
-from pipeline.plumbing import Pipe, Token, load_token, dump_token
+from unittest.mock import MagicMock
+from pipeline.plumbing import Pipe, Token, dump_token
 from pipeline.filters.uploader import AWSUploader
-from clients import S3Client
 
 
 # Fixture to mock boto3 client

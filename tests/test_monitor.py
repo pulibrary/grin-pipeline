@@ -2,7 +2,6 @@ from pathlib import Path
 import shutil
 from pipeline.filters.monitors import RequestMonitor
 from pipeline.plumbing import Pipeline, Token, dump_token
-from pipeline.config_loader import load_config
 
 
 

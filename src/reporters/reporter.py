@@ -1,9 +1,4 @@
 import os
-import subprocess
-import yaml
-import tempfile
-import signal
-import sys
 import logging
 from pipeline.config_loader import load_config
 from clients import GrinClient

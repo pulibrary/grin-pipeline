@@ -1,8 +1,6 @@
 import logging
 from pathlib import Path
 
-import boto3
-from botocore.exceptions import NoCredentialsError
 from pipeline.plumbing import Pipe, Filter, Token
 from clients import S3Client
 

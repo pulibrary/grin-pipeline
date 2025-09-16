@@ -1,6 +1,5 @@
 from pathlib import Path
 import tempfile
-import shutil
 from pipeline.plumbing import Pipe, Token, dump_token
 from pipeline.filters.requester import Requester
 

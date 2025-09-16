@@ -1,6 +1,5 @@
 # stager.py
 from pathlib import Path
-from pipeline.book_ledger import Book
 from pipeline.secretary import Secretary
 
 
