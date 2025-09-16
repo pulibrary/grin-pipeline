@@ -24,6 +24,7 @@ class Manager:
         start_bucket = Path([bucket['path'] for bucket in self.config['buckets'] if bucket['name'] == 'start'][0])        
         self.stager = Stager(self.secretary, processing_bucket, start_bucket)
         self.pipeline = Pipeline(config)
+        self.processes = []
 
 
     @property
@@ -48,9 +49,41 @@ class Manager:
         self.stager.stage()
 
 
-    # def prime_pipeline(self, how_many:int=20) -> None:
-    #     primer = Primer(self.config)
-    #     primer.prime()
+    def repl(self):
+        print("\nManager REPL. Type 'help' for commands.")
+        while True:
+            try:
+                cmd = input("manager> ").strip()
+                if cmd == "exit":
+                    print("\nExiting Manager.")
+                    break
+                elif cmd == "pipeline status":
+                    print(self.pipeline_status)
+                elif cmd == "ledger_status":
+                    print(self.ledger_status)
+                elif cmd == "token bag status":
+                    print(self.token_bag_status)
+                elif cmd == "fill token bag":
+                    self.fill_token_bag()
+                    print(self.token_bag)
+                
+                
+            except (KeyboardInterrupt, EOFError):
+                print("\nExiting Manager.")
+                break
+                
+    def run(self):
+        def shutdown_handler(signum, frame):
+            print("\nShutting down Manager...")
+            # do other things
+            sys.exit(0)
+
+        signal.signal(signal.SIGINT, shutdown_handler)
+        signal.signal(signal.SIGTERM, shutdown_handler)
+
+        self.repl()
+    
+
 
 
 class ManagerOld:
@@ -142,5 +175,5 @@ if __name__ == "__main__":
     logging.basicConfig(level=log_level)
 
 
-    manager = Manager(config_path)
+    manager = Manager(config)
     manager.run()
