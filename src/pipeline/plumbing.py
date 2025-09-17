@@ -45,12 +45,8 @@ def load_token(token_file:Path):
         token_info = json.load(f)
         return Token(token_info)
 
-def dump_token(token, bag_dir:Path, filename=None):
-    if filename is None:
-        token_path: Path = (bag_dir / token.name).with_suffix(".json")
-    else:
-        token_path:Path = bag_dir / filename
-    with token_path.open("w+") as f:
+def dump_token(token, destination:Path):
+    with destination.open("w+") as f:
         json.dump(token.content, fp=f, indent=2)
 
 
@@ -63,37 +59,91 @@ class Pipe:
     def __repr__(self) -> str:
         return f"Pipe('{self.input}', '{self.output}')"
 
+    # @property
+    # def token_in_path(self) -> Path:
+    #     if self.token and self.token.name:
+    #         return self.input / Path(self.token.name).with_suffix(".json")
+    #     else:
+    #         raise ValueError("pipe doesn't contain a token")
+
+    # @property
+    # def token_out_path(self) -> Path:
+    #     if self.token and self.token.name:
+    #         return self.output / Path(self.token.name).with_suffix(".json")
+
+    #     else:
+    #         raise ValueError("pipe doesn't contain a token")
+
+    # @property
+    # def token_marked_path(self) -> Path:
+    #     if self.token and self.token.name:
+    #         return self.input / Path(self.token.name).with_suffix(".bak")
+    #     else:
+    #         raise ValueError("pipe doesn't contain a token")
+
+    # @property
+    # def token_error_path(self) -> Path:
+    #     if self.token and self.token.name:
+    #         return self.input / Path(self.token.name).with_suffix(".err")
+    #     else:
+    #         raise ValueError("pipe doesn't contain a token")
+
+    def in_path(self, token) -> Path:
+        if token is not None and token.name is not None:
+            return self.input / Path(token.name).with_suffix(".json")
+        else:
+            raise ValueError("no token or token name")
+    
+    def out_path(self, token) -> Path:
+        if self.token and self.token.name:
+            return self.output / Path(token.name).with_suffix(".json")
+        else:
+            raise ValueError("no token or token name")
+
+    def marked_path(self, token) -> Path:
+        if self.token and self.token.name:
+            return self.input / Path(token.name).with_suffix(".bak")
+        else:
+            raise ValueError("no token or token name")
+
+    def error_path(self, token) -> Path:
+        if self.token and self.token.name:
+            return self.input / Path(token.name).with_suffix(".err")
+        else:
+            raise ValueError("no token or token name")
+
+
     @property
     def token_in_path(self) -> Path:
         if self.token and self.token.name:
-            return self.input / Path(self.token.name).with_suffix(".json")
+            return self.input
         else:
             raise ValueError("pipe doesn't contain a token")
 
     @property
     def token_out_path(self) -> Path:
-        if self.token:
-            # return self.output / Path(self.token.name).with_suffix(".json")
+        if self.token and self.token.name:
             return self.output
+
         else:
             raise ValueError("pipe doesn't contain a token")
 
     @property
     def token_marked_path(self) -> Path:
         if self.token and self.token.name:
-            return self.input / Path(self.token.name).with_suffix(".bak")
+            return self.input 
         else:
             raise ValueError("pipe doesn't contain a token")
 
     @property
     def token_error_path(self) -> Path:
         if self.token and self.token.name:
-            return self.input / Path(self.token.name).with_suffix(".err")
+            return self.input 
         else:
             raise ValueError("pipe doesn't contain a token")
 
     def take_token(self):
-        if self.token:
+        if self.token is not None:
             logging.error("there's already a current token")
             return None
 
@@ -107,21 +157,25 @@ class Pipe:
             return None
 
     def mark_token(self):
-        if self.token:
-            self.token_in_path.rename(self.token_marked_path)
+        if self.token and self.token.name:
+            unmarked_path:Path = self.in_path(self.token)
+            marked_path:Path = self.marked_path(self.token)
+            if unmarked_path.is_file():
+                unmarked_path.rename(marked_path)
+
 
     def delete_marked_token(self):
-        if self.token_marked_path and self.token_marked_path.is_file():
-            self.token_marked_path.unlink()
+        marked_path:Path = self.marked_path(self.token)
+        marked_path.unlink()
 
     def put_token(self, errorFlg: bool = False) -> None:
+
         if self.token:
             if errorFlg:
-                out_path = self.token_error_path
+                error_path = self.error_path(self.token)
+                dump_token(self.token, error_path)
             else:
-                out_path = self.token_out_path
-                
-            dump_token(self.token, out_path)
+                dump_token(self.token, self.out_path(self.token))
 
             self.delete_marked_token()
             self.token = None
@@ -129,7 +183,7 @@ class Pipe:
     def put_token_back(self, errorFlg: bool = False) -> None:
         if self.token:
             if errorFlg:
-                out_path = self.token_error_path
+                dump_token(self.error_path(self.token))
             else:
                 out_path = self.input
                 

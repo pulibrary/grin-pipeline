@@ -54,6 +54,7 @@ class AWSUploader(Uploader):
             successflg = True
         else:
             logging.info(f"Store operation starting: {barcode}")
+            breakpoint()
             status = self.client.store_object(barcode)
             logging.info(f"Store operation complete: {barcode}")
             if status is True:

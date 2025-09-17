@@ -32,8 +32,9 @@ class Manager:
             "ledger status": {"help" : "print ledger status", "fn" : lambda: print(self.ledger_status)},
             "token bag status" : {"help" : "print token bag status", "fn" : lambda: print(self.token_bag_status)},
             "fill token bag" : {"help" : "fill token bag with tokens", "fn" : self._fill_token_bag_command},
-            "synchronize" : {"help" : "sync GRIN converted with pipeline", "fn" : self_synchronize_command),
+            "synchronize" : {"help" : "sync GRIN converted with pipeline", "fn" : self._synchronize_command},
             "request monitor" : {"help": "request monitor dry run", "fn": lambda: self.request_monitor.dry_run},
+            "stage" : {"help" : "put the tokens into the pipeline", "fn": self._stage_command},
             "help" : {"help" : "show commands", "fn": self._help_command}
         }
 
@@ -95,7 +96,11 @@ class Manager:
         return False
         
             
-
+    def _stage_command(self):
+           self.stager.update_tokens()
+           self.stager.stage()
+           print("Staged.")
+           return False
 
                 
     def run(self):

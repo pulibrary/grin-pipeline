@@ -36,4 +36,6 @@ class Synchronizer:
         for barcode in self.out_of_sync_barcodes:
             chosen.append(self.secretary.choose_book(barcode))
         self.secretary.commit()
+        self.stager.stage()
+        
         return chosen
