@@ -27,11 +27,11 @@ def test_setup():
     barcode1 = '1234567'
     barcode2 = '2345678'
     
-    tok1 = Token({'barcode': barcode1})
-    tok2 = Token({'barcode': barcode2})
+    tok1:Token = Token({'barcode': barcode1})
+    tok2:Token = Token({'barcode': barcode2})
     
-    dump_token(tok1, requested_dir)
-    dump_token(tok2, requested_dir)
+    dump_token(tok1, requested_dir / Path(tok1.name).with_suffix('.json'))
+    dump_token(tok2, requested_dir / Path(tok2.name).with_suffix('.json'))
     
     
     config = {}

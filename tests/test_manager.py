@@ -21,14 +21,24 @@ def test_manager(shared_datadir):
 
     start_bucket = Path(tmpdir) / "start_bucket"
     start_bucket.mkdir(parents=True)
+
+    requested_bucket = Path(tmpdir) / "requested_bucket"
+    requested_bucket.mkdir(parents=True)
+
+    converted_bucket = Path(tmpdir) / "converted_bucket"
+    converted_bucket.mkdir(parents=True)
+
+
         
     config = {}
     config['global'] = {}
     config['global']['ledger_file'] = str(test_ledger_file)
     config['global']['token_bag'] = str(test_token_dir)
     config['global']['processing_bucket'] = str(processing_bucket)
-    config['buckets'] =[{'name' : 'start', 'path' : start_bucket}]
-
+    config['buckets'] =[{'name' : 'start', 'path' : start_bucket},
+                        {'name' : 'requested', 'path' : requested_bucket},
+                        {'name' : 'converted', 'path' : converted_bucket},
+]
     manager = Manager(config)
 
     assert len(manager.pipeline_status['start']['waiting_tokens']) == 0

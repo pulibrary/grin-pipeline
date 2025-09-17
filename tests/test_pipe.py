@@ -52,19 +52,10 @@ def test_take_token(test_pipe):
 
     test_pipe.take_token()
     assert test_pipe.token is not None
-    breakpoint()
     assert filename not in list(dummy_in.glob("*.*"))
     assert backup_name in list(dummy_in.glob("*.*"))
 
 
-
-def test_token_paths(test_pipe):
-    reset_test_dirs()
-    test_pipe.take_token()
-    assert test_pipe.token_in_path ==  Path(f"/tmp/test_pipe/in")
-    assert test_pipe.token_out_path == Path(f"/tmp/test_pipe/out")
-    assert test_pipe.token_marked_path ==  Path(f"/tmp/test_pipe/in")
-    assert test_pipe.token_error_path ==   Path(f"/tmp/test_pipe/in")
 
 
 def test_put_token(test_pipe):

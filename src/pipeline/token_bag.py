@@ -37,7 +37,7 @@ class TokenBag:
         if self.bag_dir:
             self.clear_bag_dir()
             for token in self.tokens:
-                dump_token(token, self.bag_dir)
+                dump_token(token, self.bag_dir / Path(token.name).with_suffix('.json'))
 
     def find(self, barcode):
         hits = [tok for tok in self.tokens if tok.name == barcode]
@@ -77,6 +77,6 @@ class TokenBag:
         barcodes = [tok.get_prop('barcode') for tok in self.tokens]
         for barcode in barcodes:
             token = self.take_token(barcode)
-            dump_token(token, bucket)
+            dump_token(token, bucket / Path(token.name).with_suffix('.json'))
             
         

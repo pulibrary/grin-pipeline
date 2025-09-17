@@ -59,34 +59,6 @@ class Pipe:
     def __repr__(self) -> str:
         return f"Pipe('{self.input}', '{self.output}')"
 
-    # @property
-    # def token_in_path(self) -> Path:
-    #     if self.token and self.token.name:
-    #         return self.input / Path(self.token.name).with_suffix(".json")
-    #     else:
-    #         raise ValueError("pipe doesn't contain a token")
-
-    # @property
-    # def token_out_path(self) -> Path:
-    #     if self.token and self.token.name:
-    #         return self.output / Path(self.token.name).with_suffix(".json")
-
-    #     else:
-    #         raise ValueError("pipe doesn't contain a token")
-
-    # @property
-    # def token_marked_path(self) -> Path:
-    #     if self.token and self.token.name:
-    #         return self.input / Path(self.token.name).with_suffix(".bak")
-    #     else:
-    #         raise ValueError("pipe doesn't contain a token")
-
-    # @property
-    # def token_error_path(self) -> Path:
-    #     if self.token and self.token.name:
-    #         return self.input / Path(self.token.name).with_suffix(".err")
-    #     else:
-    #         raise ValueError("pipe doesn't contain a token")
 
     def in_path(self, token) -> Path:
         if token is not None and token.name is not None:
@@ -183,11 +155,11 @@ class Pipe:
     def put_token_back(self, errorFlg: bool = False) -> None:
         if self.token:
             if errorFlg:
-                dump_token(self.error_path(self.token))
+                put_back_path = self.error_path(self.token)
             else:
-                out_path = self.input
+                put_back_path = self.in_path(self.token)
                 
-            dump_token(self.token, out_path)
+            dump_token(self.token, put_back_path)
 
             self.delete_marked_token()
             self.token = None

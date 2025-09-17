@@ -43,7 +43,7 @@ def test_upload_when_object_already_exists():
         "processing_bucket": str(processing_bucket)
     }
     token = Token(token_info)
-    dump_token(token, pipe_in)
+    dump_token(token, pipe_in / Path(token.name).with_suffix('.json'))
 
     mock_s3 = MagicMock()
     mock_s3.object_exists.return_value = True  # pretend object already exists
@@ -84,7 +84,8 @@ def test_upload_when_object_does_not_already_exist():
     }
 
     token = Token(token_info)
-    dump_token(token, pipe_in)
+    dump_token(token, pipe_in / Path(token.name).with_suffix('.json'))
+    
 
     mock_s31 = MagicMock()
     mock_s31.object_exists.return_value = False  # pretend object does not exist
@@ -127,7 +128,7 @@ def test_upload_failure():
     }
 
     token = Token(token_info)
-    dump_token(token, pipe_in)
+    dump_token(token, pipe_in / Path(token.name).with_suffix('.json'))
     mock_s31 = MagicMock()
     mock_s31.object_exists.return_value = False  # pretend object does not exist
     mock_s31.store_object.return_value = False  # pretend object was not stored

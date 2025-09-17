@@ -22,7 +22,7 @@ for f in [input_token_file, expected_outfile]:
         f.unlink()
 
 token = Token(token_info)
-dump_token(token, inpath)
+dump_token(token, input_token_file)
 
 
 

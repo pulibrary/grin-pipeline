@@ -1,3 +1,4 @@
+from pathlib import Path
 import os
 import logging
 from pipeline.config_loader import load_config
@@ -85,12 +86,12 @@ class RequestMonitor(Monitor):
             if requested_p:
                 logger.info(f"conversion in process: {token}")
                 token.write_log("conversion in process", "INFO", "Monitor")
-                dump_token(token, self.pipe.input)
+                dump_token(token, self.pipe.input / Path(token.name).with_suffix('.json'))
 
             elif converted_p:
                 logger.info(f"conversion complete: {token}")
                 token.write_log("conversion complete", "INFO", "Monitor")
-                dump_token(token, self.pipe.output)
+                dump_token(token, self.pipe.output / Path(token.name).with_suffix('.json'))
                 token_path.unlink()
                 
 
