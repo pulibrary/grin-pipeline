@@ -45,27 +45,38 @@ class AWSUploader(Uploader):
         super().__init__(pipe)
         self.client = s3_client
 
+
+    def validate_token(self, token:Token) -> bool:
+        status:bool = True
+        barcode = token.get_prop('barcode')
+        if barcode is not None:
+            if self.client.object_exists(barcode):
+                token.put_prop("upload_status", "duplicate")
+        return status
+
     def process_token(self, token:Token) -> bool:
         successflg = False
-        barcode = token.content['barcode']
-        if self.client.object_exists(barcode):
-            self.log_to_token(token, "INFO", "Object exists in store")
-            token.content["upload_status"] = "duplicate"
+        barcode = token.get_prop('barcode')
+
+        logging.info(f"Store operation starting: {barcode}")
+        if token.get_prop("upload_status") == "duplicate":
+            self.log_to_token(token, "INFO", "Object already stored.")
             successflg = True
+
         else:
-            logging.info(f"Store operation starting: {barcode}")
             status = self.client.store_object(barcode)
+        
             logging.info(f"Store operation complete: {barcode}")
             if status is True:
                 self.log_to_token(token, "INFO", "Object stored")
-                token.content["upload_status"] = "success"
+                token.put_prop("upload_status", "success")
                 successflg = True
             else:
                 logging.error(f"Object not stored: {barcode}")
                 self.log_to_token(token, "ERROR", "Object not stored")
-                token.content["upload_status"] = "fail"
+                token.put_prop("upload_status", "fail")
+
                 successflg = False
-        
 
         return successflg
     

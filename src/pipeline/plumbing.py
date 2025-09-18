@@ -16,16 +16,17 @@ class Token:
     def __repr__(self) -> str:
         return f"Token({self.name})"
 
-    def get_prop(self, prop):
+    def get_prop(self, prop)-> str | None:
         return self.content.get(prop)
 
-    def put_prop(self, prop, val):
+    def put_prop(self, prop:str, val:str) -> str | None:
         self.content[prop] = val
         return self.get_prop(val)
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         return self.get_prop('barcode')
+            
 
     def write_log(
         self, message: str, level: Optional[str] = None, stage: Optional[str] = None
@@ -40,12 +41,12 @@ class Token:
 
 # Utilities for reading and writing Tokens
 
-def load_token(token_file:Path):
+def load_token(token_file:Path) -> Token:
     with token_file.open('r') as f:
         token_info = json.load(f)
         return Token(token_info)
 
-def dump_token(token, destination:Path):
+def dump_token(token, destination:Path) -> None:
     with destination.open("w+") as f:
         json.dump(token.content, fp=f, indent=2)
 
