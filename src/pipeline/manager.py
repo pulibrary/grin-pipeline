@@ -33,7 +33,8 @@ class Manager:
             "token bag status" : {"help" : "print token bag status", "fn" : lambda: print(self.token_bag_status)},
             "fill token bag" : {"help" : "fill token bag with tokens", "fn" : self._fill_token_bag_command},
             "synchronize" : {"help" : "sync GRIN converted with pipeline", "fn" : self._synchronize_command},
-            "request monitor" : {"help": "request monitor dry run", "fn": lambda: self.request_monitor.dry_run()},
+            "dry request monitor" : {"help": "request monitor dry run", "fn": lambda: self.request_monitor.dry_run()},
+            "request monitor" : {"help": "request monitor dry run", "fn": lambda: self.request_monitor.run()},
             "stage" : {"help" : "put the tokens into the pipeline", "fn": self._stage_command},
             "help" : {"help" : "show commands", "fn": self._help_command}
         }
@@ -86,12 +87,9 @@ class Manager:
             print(f"{k}: {v.get('help')}")
         return False
 
-    def _request_monitor_command(self):
-            pass
-
 
     def _synchronize_command(self):
-        synced = self.synchronizer.synchronize()
+        synced = self.synchronizer.synchronize(stage=True)
         print(f"Number of files synchronized: {len(synced)}")
         return False
         
