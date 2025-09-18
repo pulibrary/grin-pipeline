@@ -62,6 +62,10 @@ class Cleaner(Filter):
         return successflg
 
 if __name__ == "__main__":
+    if "FINISHED_BUCKET" not in os.environ:
+        print("Please set the FINISHED_BUCKET environment variable.")
+        sys.exit(1)
+
     import argparse
 
     parser = argparse.ArgumentParser()
@@ -71,7 +75,7 @@ if __name__ == "__main__":
 
     pipe: Pipe = Pipe(Path(args.input), Path(args.output))
 
-    cleaner:Cleaner = Cleaner(pipe, os.environ.get("FINISHED_BUCKET")
+    cleaner:Cleaner = Cleaner(pipe, os.environ.get("FINISHED_BUCKET"))
     logger.info("starting cleaner")
     cleaner.run_forever()
     
