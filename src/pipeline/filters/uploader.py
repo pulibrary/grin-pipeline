@@ -1,3 +1,5 @@
+import sys
+import os
 import logging
 from pathlib import Path
 
@@ -82,17 +84,25 @@ class AWSUploader(Uploader):
     
 
 if __name__ == "__main__":
+    if "OBJECT_STORE" not in os.environ:
+        print("Please set the OBJECT_STORE environment variable.")
+        sys.exit(1)
+
+    if "LOCAL_DIR" not in os.environ:
+        print("Please set the LOCAL_DIR environment variable (probably the processing bucket).")
+        sys.exit(1)
+
+
     import argparse
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", required=True)
     parser.add_argument("--output", required=True)
-    parser.add_argument("--store", default="google-books-dev")
-    parser.add_argument("--cache", default="/tmp")
     args = parser.parse_args()
 
     pipe: Pipe = Pipe(Path(args.input), Path(args.output))
-    s3_client = S3Client(args.cache, args.store)
+    s3_client = S3Client(os.environ.get("LOCAL_DIR"), os.environ.get("OBJECT_STORE"))
+
 
     uploader: AWSUploader = AWSUploader(pipe, s3_client)
     logger.info("starting uploader")
