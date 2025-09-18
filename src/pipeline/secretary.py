@@ -59,7 +59,8 @@ class Secretary:
             self.bag.add_book(book.barcode)
             return book
         else:
-            raise KeyError(f"{barcode} not in ledger")
+            error_msg = f"{barcode} is not in ledger"
+            raise KeyError(error_msg)
 
     def choose_books(self, how_many:int):
         unprocessed_books = self.unprocessed_books
