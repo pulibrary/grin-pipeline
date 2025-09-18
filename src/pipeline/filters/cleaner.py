@@ -1,3 +1,4 @@
+import os
 import logging
 from pathlib import Path
 from pipeline.plumbing import Pipe, Filter, Token
@@ -14,9 +15,9 @@ logger: logging.Logger = logging.getLogger(__name__)
 class Cleaner(Filter):
     """The Cleaner simply moves the tarball from the processing bucket
     to the done bucket."""
-    def __init__(self, pipe: Pipe, done_bucket:str="/var/tmp/done") -> None:
+    def __init__(self, pipe: Pipe, finished_bucket:str="/var/tmp/done") -> None:
         super().__init__(pipe)
-        self.done_bucket = Path(done_bucket)
+        self.finished_bucket = Path(finished_bucket)
 
 
     def source_file(self, token: Token) -> Path:
@@ -26,7 +27,7 @@ class Cleaner(Filter):
 
     def destination_file(self, token: Token) -> Path:
         filename = Path(token.content["barcode"]).with_suffix(".tgz")
-        destination_path = self.done_bucket / filename
+        destination_path = self.finished_bucket / filename
         return destination_path
 
 
@@ -39,10 +40,10 @@ class Cleaner(Filter):
             )
             status = False
 
-        if self.done_bucket.is_dir() is False:
-            logging.error(f"target directory does not exist: {self.done_bucket}")
+        if self.finished_bucket.is_dir() is False:
+            logging.error(f"target directory does not exist: {self.finished_bucket}")
             self.log_to_token(
-                token, "ERROR", f"target directory does not exist: {self.done_bucket}"
+                token, "ERROR", f"target directory does not exist: {self.finished_bucket}"
             )
             status = False
             
@@ -70,7 +71,7 @@ if __name__ == "__main__":
 
     pipe: Pipe = Pipe(Path(args.input), Path(args.output))
 
-    cleaner:Cleaner = Cleaner(pipe)
+    cleaner:Cleaner = Cleaner(pipe, os.environ.get("FINISHED_BUCKET")
     logger.info("starting cleaner")
     cleaner.run_forever()
     

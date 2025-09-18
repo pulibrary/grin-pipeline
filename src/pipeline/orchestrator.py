@@ -38,16 +38,20 @@ class Orchestrator:
             "--output",
             out_bucket,
         ]
-        if "decryption_passphrase" in filt:
-            extra_env["DECRYPTION_PASSPHRASE"] = filt["decryption_passphrase"]
+        if filt.get('args'):
+            for k,v in filt.get('args').items():
+                extra_env[k] = v
+                
+        # if "decryption_passphrase" in filt:
+        #     extra_env["DECRYPTION_PASSPHRASE"] = filt["decryption_passphrase"]
 
-        if "object_store" in filt:
-            extra_env["OBJECT_STORE"] = filt["object_store"]
+        # if "object_store" in filt:
+        #     extra_env["OBJECT_STORE"] = filt["object_store"]
 
-        if "local_dir" in filt:
-            extra_env["LOCAL_DIR"] = filt["local_dir"]
-
+        # if "local_dir" in filt:
+        #     extra_env["LOCAL_DIR"] = filt["local_dir"]
         logging.info("Starting filter: %s", " ".join(cmd))
+        
         proc = subprocess.Popen(cmd, env={**os.environ, **extra_env})
         self.processes.append((filt["name"], proc))
 
