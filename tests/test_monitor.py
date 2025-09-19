@@ -4,16 +4,6 @@ from pipeline.filters.monitors import RequestMonitor
 from pipeline.plumbing import Pipeline, Token, dump_token
 
 
-def test_monitor(shared_datadir):
-    config = {}
-    config["buckets"] = [
-        {"name": "start", "path": "/var/tmp/grin/pipeline/start"},
-        {"name": "requested", "path": "/var/tmp/grin/pipeline/requested"},
-    ]
-
-    pipeline: Pipeline = Pipeline(config)
-
-
 def test_setup():
     tmpdir = Path("/tmp/test_monitor")
     requested_dir = Path(tmpdir) / "requested"

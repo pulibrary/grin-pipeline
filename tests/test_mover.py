@@ -1,7 +1,6 @@
 from pathlib import Path
 import pytest
 import shutil
-import json
 from pipeline.plumbing import Pipe, Token, dump_token
 from pipeline.filters.mover import Mover
 
