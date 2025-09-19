@@ -50,5 +50,6 @@ class Synchronizer:
         
         self.secretary.commit()
         if stage is True:
+            self.stager.update_tokens()
             self.stager.stage()
         return chosen
