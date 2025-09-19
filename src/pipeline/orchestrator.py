@@ -17,19 +17,45 @@ logging.basicConfig(level=log_level)
 
 
 class Orchestrator:
+    """
+    Launches and manages filter processes for the pipeline.
+
+    The Orchestrator is responsible for starting, stopping, and monitoring
+    individual filter processes that make up the pipeline stages. Each filter
+    runs as a separate subprocess, allowing for parallel processing and
+    fault isolation.
+
+    Attributes:
+        processes (list): List of tuples containing (filter_name, subprocess.Popen)
+        pipeline (Pipeline): Pipeline instance for bucket management
+    """
     def __init__(self) -> None:
         self.processes = []
         self.pipeline = Pipeline(config)
 
     def start_filters(self):
+        """Start all configured filter processes.
+
+        Iterates through the filters defined in the configuration and starts
+        each one as a separate subprocess.
+        """
         for filt in config.get("filters", []):
             self.start_filter(filt)
 
     def start_filter(self, filt):
+        """Start a single filter process.
+
+        Args:
+            filt (dict): Filter configuration containing script path, arguments,
+                        and pipe configuration.
+        """
         extra_env = {}
 
+        # Resolve bucket names to actual directory paths
         in_bucket = str(self.pipeline.bucket(filt["pipe"]["in"]))
         out_bucket = str(self.pipeline.bucket(filt["pipe"]["out"]))
+
+        # Build command line for filter subprocess
         cmd = [
             sys.executable,
             filt["script"],
@@ -38,6 +64,8 @@ class Orchestrator:
             "--output",
             out_bucket,
         ]
+
+        # Add any filter-specific environment variables
         if filt.get("args"):
             for k, v in filt.get("args").items():
                 extra_env[k] = v
@@ -52,7 +80,9 @@ class Orchestrator:
         #     extra_env["LOCAL_DIR"] = filt["local_dir"]
         logging.info("Starting filter: %s", " ".join(cmd))
 
+        # Start the filter process with combined environment
         proc = subprocess.Popen(cmd, env={**os.environ, **extra_env})
+        # Track the process for lifecycle management
         self.processes.append((filt["name"], proc))
 
     def start_filter_old(self, filt):
@@ -74,6 +104,11 @@ class Orchestrator:
         self.processes.append((filt["name"], proc))
 
     def stop_filters(self):
+        """Stop all running filter processes gracefully.
+
+        Sends SIGTERM to each process and waits up to 5 seconds for graceful
+        shutdown. If a process doesn't terminate, it will be killed with SIGKILL.
+        """
         for name, proc in self.processes:
             logging.info("Stopping filter: %s", name)
             proc.terminate()
@@ -84,6 +119,11 @@ class Orchestrator:
         self.processes.clear()
 
     def status(self):
+        """Print the status of all filter processes.
+
+        Shows whether each filter is running or has exited, along with
+        the exit code for terminated processes.
+        """
         for name, proc in self.processes:
             status = "running" if proc.poll() is None else f"exited ({proc.returncode})"
             print(f"Filter '{name}': {status}")
@@ -98,6 +138,11 @@ class Orchestrator:
         self.start_filter(filt)
 
     def repl(self):
+        """Run the interactive command interface for orchestrator management.
+
+        Provides commands for starting, stopping, restarting filters, checking
+        status, and dynamically adding new filters.
+        """
         print("\nOrchestrator REPL. Type 'help' for commands.")
         while True:
             try:
@@ -137,6 +182,12 @@ class Orchestrator:
                 break
 
     def run(self, repl: bool = True):
+        """Run the orchestrator with optional REPL interface.
+
+        Args:
+            repl (bool): Whether to start the interactive REPL interface.
+                        Defaults to True.
+        """
         def shutdown_handler(signum, frame):
             print("\nShutting down Orchestrator...")
             self.stop_filters()

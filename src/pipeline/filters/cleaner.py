@@ -13,24 +13,56 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class Cleaner(Filter):
-    """The Cleaner simply moves the tarball from the processing bucket
-    to the done bucket."""
+    """
+    Final cleanup filter that moves processed files to a finished directory.
+
+    The Cleaner filter performs the final stage of processing by moving
+    successfully processed tarball files from the processing bucket to
+    a 'done' directory for archival.
+
+    Attributes:
+        finished_bucket (Path): Directory where completed files are stored
+    """
 
     def __init__(self, pipe: Pipe, finished_bucket: str = "/var/tmp/done") -> None:
         super().__init__(pipe)
         self.finished_bucket = Path(finished_bucket)
 
     def source_file(self, token: Token) -> Path:
+        """Get the path to the source file to be moved.
+
+        Args:
+            token (Token): Token containing barcode and processing bucket
+
+        Returns:
+            Path: Path to the .tgz file in the processing bucket
+        """
         input_path = Path(token.content["processing_bucket"])
         input_filename: Path = Path(token.content["barcode"]).with_suffix(".tgz")
         return input_path / input_filename
 
     def destination_file(self, token: Token) -> Path:
+        """Get the destination path for the file in the finished bucket.
+
+        Args:
+            token (Token): Token containing barcode
+
+        Returns:
+            Path: Path where the file will be moved in the finished bucket
+        """
         filename = Path(token.content["barcode"]).with_suffix(".tgz")
         destination_path = self.finished_bucket / filename
         return destination_path
 
     def validate_token(self, token) -> bool:
+        """Validate that source file and target directory exist.
+
+        Args:
+            token (Token): Token to validate
+
+        Returns:
+            bool: True if source file exists and target directory is valid
+        """
         status: bool = True
         if self.source_file(token).exists() is False:
             logging.error(f"file to clean does not exist: {self.source_file(token)}")
@@ -53,6 +85,14 @@ class Cleaner(Filter):
         return status
 
     def process_token(self, token: Token) -> bool:
+        """Move the processed file to the finished directory.
+
+        Args:
+            token (Token): Token containing file paths
+
+        Returns:
+            bool: True if file was moved successfully, False otherwise
+        """
         successflg = False
         try:
             self.source_file(token).rename(self.destination_file(token))

@@ -5,14 +5,43 @@ from pipeline.plumbing import Pipe, Filter, Token
 
 
 class Requester(Filter):
+    """
+    Pipeline filter that initiates conversion requests for books.
+
+    The Requester filter takes tokens containing book barcodes and submits
+    them to the GRIN service for conversion processing. This is typically
+    the first processing stage in the pipeline.
+
+    Attributes:
+        grin (GrinClient): Client for communicating with the GRIN conversion service
+    """
     def __init__(self, pipe: Pipe) -> None:
         super().__init__(pipe)
         self.grin: GrinClient = GrinClient()
 
     def validate_token(self, token: Token) -> bool:
+        """Validate that the token contains required fields for conversion request.
+
+        Args:
+            token (Token): Token to validate
+
+        Returns:
+            bool: Always returns True as all tokens are valid for conversion requests
+        """
         return True
 
     def process_token(self, token: Token) -> bool:
+        """Submit a book conversion request to the GRIN service.
+
+        Extracts the barcode from the token and submits it to the GRIN client
+        for conversion processing. Logs the response status to the token.
+
+        Args:
+            token (Token): Token containing the book barcode to convert
+
+        Returns:
+            bool: True if the conversion request was successful, False otherwise
+        """
         successflg = False
         barcode = token.content["barcode"]
         response = self.grin.convert_book(barcode)

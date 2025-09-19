@@ -15,10 +15,24 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class Uploader(Filter):
+    """
+    Base class for uploading processed files to object storage.
+
+    Provides common functionality for validating and uploading files,
+    with specific implementations for different storage backends.
+    """
     def __init__(self, pipe: Pipe) -> None:
         super().__init__(pipe)
 
     def infile(self, token: Token) -> Path:
+        """Get the path to the processed file to upload.
+
+        Args:
+            token (Token): Token containing barcode and processing bucket
+
+        Returns:
+            Path: Path to the .tgz file to upload
+        """
         input_path = Path(token.content["processing_bucket"])
         input_filename: Path = Path(token.content["barcode"]).with_suffix(".tgz")
         return input_path / input_filename
@@ -38,6 +52,15 @@ class Uploader(Filter):
 
 
 class AWSUploader(Uploader):
+    """
+    Uploader implementation for AWS S3 object storage.
+
+    Handles uploading processed book files to S3, including duplicate
+    detection to avoid re-uploading existing objects.
+
+    Attributes:
+        client (S3Client): S3 client for storage operations
+    """
     def __init__(self, pipe: Pipe, s3_client: S3Client) -> None:
         super().__init__(pipe)
         self.client = s3_client
@@ -51,6 +74,17 @@ class AWSUploader(Uploader):
         return status
 
     def process_token(self, token: Token) -> bool:
+        """Upload the processed file to S3 storage.
+
+        Checks for duplicates and either skips upload or stores the object.
+        Updates token with upload status.
+
+        Args:
+            token (Token): Token containing file and metadata
+
+        Returns:
+            bool: True if upload succeeded or was skipped (duplicate), False otherwise
+        """
         successflg = False
         barcode = token.get_prop("barcode")
 

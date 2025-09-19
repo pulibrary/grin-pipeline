@@ -14,18 +14,38 @@ from pipeline.synchronizer import Synchronizer
 
 
 class Manager:
+    """
+    High-level coordinator that manages the token bag, ledger, and staging operations.
+
+    The Manager serves as the main interface for controlling the pipeline workflow,
+    providing a REPL interface for interactive management of books, tokens, and
+    pipeline operations.
+
+    Attributes:
+        config (dict): Pipeline configuration dictionary
+        ledger (BookLedger): Manages available books and processing status
+        token_bag (TokenBag): Holds tokens ready for processing
+        secretary (Secretary): Manages book selection from ledger into token bag
+        stager (Stager): Moves tokens from bag to pipeline start
+        pipeline (Pipeline): Manages bucket directories and token flow
+        request_monitor (RequestMonitor): Monitors conversion request status
+        synchronizer (Synchronizer): Syncs GRIN converted files with pipeline
+        processes (list): List of running subprocess references
+        commands (dict): Available REPL commands and their handlers
+    """
     def __init__(self, config: dict):
         self.config = config
         self.ledger = BookLedger(config["global"]["ledger_file"])
         self.token_bag = TokenBag(config["global"]["token_bag"])
         self.secretary = Secretary(self.token_bag, self.ledger)
         processing_bucket = Path(config["global"]["processing_bucket"])
+        # Find the start bucket path from the bucket configuration
         start_bucket = Path(
             [
                 bucket["path"]
                 for bucket in self.config["buckets"]
                 if bucket["name"] == "start"
-            ][0]
+            ][0]  # Take the first (and should be only) start bucket
         )
         self.stager = Stager(self.secretary, processing_bucket, start_bucket)
         self.pipeline = Pipeline(config)
@@ -82,14 +102,29 @@ class Manager:
         return self.secretary.bag_size
 
     def fill_token_bag(self, how_many: int = 20):
+        """Fill the token bag with a specified number of books from the ledger.
+
+        Args:
+            how_many (int): Number of books to select from the ledger. Defaults to 20.
+        """
         self.secretary.choose_books(how_many)
         self.secretary.commit()
 
     def stage(self):
+        """Stage tokens from the token bag into the pipeline start bucket.
+
+        Updates token metadata and moves tokens from the bag directory to the
+        pipeline's start bucket for processing.
+        """
         self.stager.update_tokens()
         self.stager.stage()
 
     def repl(self):
+        """Run the interactive Read-Eval-Print Loop for pipeline management.
+
+        Provides a command-line interface for managing pipeline operations
+        including status checks, token bag management, and pipeline control.
+        """
         while True:
             cmd = input("manager> ").strip()
             if cmd in self.commands:
@@ -124,6 +159,11 @@ class Manager:
         return False
 
     def run(self):
+        """Run the Manager with signal handlers for graceful shutdown.
+
+        Sets up SIGINT and SIGTERM handlers and starts the REPL interface.
+        The manager will handle Ctrl+C and termination signals gracefully.
+        """
         def shutdown_handler(signum, frame):
             print("\nShutting down Manager...")
             # do other things

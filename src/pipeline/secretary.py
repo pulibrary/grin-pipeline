@@ -5,6 +5,17 @@ from pipeline.plumbing import Token
 
 
 class Secretary:
+    """
+    Manages book selection from the ledger into the token bag.
+
+    The Secretary coordinates between the BookLedger and TokenBag,
+    handling the selection of books for processing and their conversion
+    into tokens ready for the pipeline.
+
+    Attributes:
+        bag (TokenBag): The token bag for storing selected books
+        ledger (BookLedger): The book ledger containing available books
+    """
     def __init__(self, bag: TokenBag, ledger: BookLedger) -> None:
         self.bag = bag
         self.ledger = ledger
@@ -55,11 +66,19 @@ class Secretary:
             raise KeyError(error_msg)
 
     def choose_books(self, how_many: int):
+        """Select multiple books from the ledger for processing.
+
+        Args:
+            how_many (int): Maximum number of books to select
+        """
         unprocessed_books = self.unprocessed_books
+        # Clamp the request to available books to prevent overselection
         if how_many > len(unprocessed_books):
             how_many = len(unprocessed_books)
+        # Take the first N unprocessed books (FIFO selection)
         books_to_choose: list[Book] | None = unprocessed_books[0:how_many]
         if books_to_choose:
+            # Convert each selected book into a token in the bag
             for book in books_to_choose:
                 self.choose_book(book.barcode)
 

@@ -8,6 +8,18 @@ import shutil
 
 @dataclass
 class Book:
+    """
+    Represents a book record in the processing ledger.
+
+    Tracks the processing status and timestamps for a digitized book
+    throughout its lifecycle in the pipeline.
+
+    Attributes:
+        barcode (str): Unique identifier for the book
+        date_chosen (str | None): Timestamp when book was selected for processing
+        date_completed (str | None): Timestamp when processing was completed
+        status (str | None): Current processing status ('chosen', 'completed', etc.)
+    """
     barcode: str
     date_chosen: str | None
     date_completed: str | None
@@ -30,12 +42,29 @@ class Book:
 
 
 class BookLedger:
+    """
+    Tracks available books and their processing status.
+
+    The BookLedger manages a CSV file containing book records and their
+    processing status, providing methods to select books for processing
+    and track their progress through the pipeline.
+
+    Attributes:
+        csv_file (Path): Path to the CSV ledger file
+        _books (dict[str, Book] | None): Cached book records keyed by barcode
+        _fieldnames (list): CSV column names from the ledger file
+    """
     def __init__(self, csv_file):
         self.csv_file = Path(csv_file)
         self._books: dict[str, Book] | None = None
         self._fieldnames = []
 
     def read_ledger(self) -> dict[str, Book]:
+        """Read all book records from the CSV ledger file.
+
+        Returns:
+            dict[str, Book]: Dictionary mapping barcodes to Book objects
+        """
         books = {}
         with self.csv_file.open("r") as f:
             reader: csv.DictReader = csv.DictReader(f)
@@ -46,6 +75,12 @@ class BookLedger:
         return books
 
     def write_ledger(self, backup=True):
+        """Write all book records back to the CSV ledger file.
+
+        Args:
+            backup (bool): Whether to create a backup of the existing file.
+                          Defaults to True.
+        """
         if backup is True:
             backup_path = Path(f"{str(self.csv_file)}~")
             shutil.copy2(self.csv_file, backup_path)
@@ -85,6 +120,19 @@ class BookLedger:
         self.books[barcode] = book
 
     def choose_book(self, barcode) -> Book:
+        """Mark a book as chosen for processing.
+
+        Updates the book's status to 'chosen' and sets the chosen timestamp.
+
+        Args:
+            barcode (str): Barcode of the book to choose
+
+        Returns:
+            Book: The updated book record
+
+        Raises:
+            ValueError: If the book is not found in the ledger
+        """
         entry: Book | None = self.entry(barcode)
         if entry:
             entry.status = "chosen"

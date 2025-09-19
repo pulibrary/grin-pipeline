@@ -9,6 +9,15 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class Decryptor(Filter):
+    """
+    Pipeline filter that decrypts downloaded tarball files.
+
+    The Decryptor filter uses GPG to decrypt encrypted tarball files downloaded
+    from GRIN. It requires the DECRYPTION_PASSPHRASE environment variable to be set.
+
+    Attributes:
+        passphrase (str): GPG decryption passphrase from environment
+    """
     def __init__(self, pipe: Pipe) -> None:
         passphrase = os.environ.get("DECRYPTION_PASSPHRASE")
         if not passphrase:
@@ -17,16 +26,40 @@ class Decryptor(Filter):
         self.passphrase = passphrase
 
     def infile(self, token) -> Path:
+        """Get the path to the encrypted input file for this token.
+
+        Args:
+            token (Token): Token containing barcode and processing bucket
+
+        Returns:
+            Path: Path to the .tar.gz.gpg file to decrypt
+        """
         input_path = Path(token.content["processing_bucket"])
         input_filename: Path = Path(token.content["barcode"]).with_suffix(".tar.gz.gpg")
         return input_path / input_filename
 
     def outfile(self, token) -> Path:
+        """Get the path for the decrypted output file for this token.
+
+        Args:
+            token (Token): Token containing barcode and processing bucket
+
+        Returns:
+            Path: Path where the decrypted .tgz file will be saved
+        """
         output_path: Path = Path(token.content["processing_bucket"])
         output_filename: Path = Path(token.content["barcode"]).with_suffix(".tgz")
         return output_path / output_filename
 
     def validate_token(self, token) -> bool:
+        """Validate that the encrypted source file exists for decryption.
+
+        Args:
+            token (Token): Token to validate
+
+        Returns:
+            bool: True if the encrypted source file exists, False otherwise
+        """
         status: bool = True
 
         if self.infile(token).exists() is False:
@@ -39,6 +72,17 @@ class Decryptor(Filter):
         return status
 
     def process_token(self, token: Token) -> bool:
+        """Decrypt the encrypted tarball file using GPG.
+
+        Runs the gpg command to decrypt the .tar.gz.gpg file and save it as
+        a .tgz file. Updates the token with decryption status.
+
+        Args:
+            token (Token): Token containing file paths and metadata
+
+        Returns:
+            bool: True if decryption succeeded, False if it failed
+        """
         logger.info(f"processing token {token.content['barcode']}")
         successflg = False
         result = subprocess.run(
