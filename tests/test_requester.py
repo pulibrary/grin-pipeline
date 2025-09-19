@@ -14,13 +14,11 @@ def test_requester():
 
         pipe = Pipe(pipe_in, pipe_out)
 
-        tok = Token({"barcode" : "12345" })
-        dump_token(tok, pipe_in / Path(tok.name).with_suffix('.json'))
-        
-        
+        tok = Token({"barcode": "12345"})
+        dump_token(tok, pipe_in / Path(tok.name).with_suffix(".json"))
+
         requester = Requester(pipe)
 
         requester.run_once()
         assert len(list(pipe.input.glob("*.*"))) == 0
         assert len(list(pipe.output.glob("*.*"))) == 1
-

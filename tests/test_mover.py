@@ -1,55 +1,52 @@
 from pathlib import Path
+import pytest
+import shutil
 import json
-from pipeline.plumbing import Pipe
+from pipeline.plumbing import Pipe, Token, dump_token
 from pipeline.filters.mover import Mover
 
-# Set up the pipeline
-pipe_in = Path("/tmp/test_pipeline/in")
-pipe_in.mkdir(parents=True, exist_ok=True)
-pipe_out = Path("/tmp/test_pipeline/out")
-pipe_out.mkdir(parents=True, exist_ok=True)
-
-input_token_file: Path = pipe_in / Path("234.json")
-
-pipe = Pipe(pipe_in, pipe_out)
-
-# Set up the mock data filesystem
-source: Path = Path("/tmp/test_data/source")
-source.mkdir(parents=True, exist_ok=True)
-destination: Path = Path("/tmp/test_data/destination")
-destination.mkdir(parents=True, exist_ok=True)
-
-test_file = Path("test_file.txt")
-
-source_file: Path = source / test_file
-destination_file: Path = destination / test_file
-
-for f in [source_file, destination_file, input_token_file]:
-    if f.exists():
-        f.unlink()
-
-token_info: dict = {
-    "barcode": "1234567",
-    "source_file": str(source_file),
-    "destination_file": str(destination_file),
-}
-
-with open(input_token_file, "w") as f:
-    json.dump(token_info, f, indent=2)
-
-# mock up the data file
-with open(source_file, mode="w") as f:
-    f.write("This is test data.")
-
-# finally create the filter
-filter: Mover = Mover(pipe)
+test_dir = Path("/tmp/test_pipe")
+barcode = "12345678"
+dummy_in = test_dir / "in"
+dummy_out = test_dir / "out"
+source = test_dir / "source"
+destination = test_dir / "destination"
+test_file = Path(f"{barcode}.json")
 
 
-def test_filter():
-    assert source_file.exists() is True
-    assert destination_file.exists() is False
+def reset_test_dirs():
+    if test_dir.is_dir():
+        try:
+            shutil.rmtree(test_dir)
+        except OSError as e:
+            print(f"error deleting path {test_dir} : {e}")
+    dummy_in.mkdir(parents=True)
+    dummy_out.mkdir(parents=True)
+    source.mkdir(parents=True)
+    destination.mkdir(parents=True)
+    token = Token({"barcode": barcode})
+    token.put_prop("source_file", str(source / test_file))
+    token.put_prop("destination_file", str(destination / test_file))
+    token_path = dummy_in / Path(barcode).with_suffix(".json")
+    dump_token(token, token_path)
+    with (source / test_file).open('w') as f:
+        f.write("This is test data.")
+    
 
-    filter.run_once()
+@pytest.fixture
+def mover():
+    pipe: Pipe = Pipe(dummy_in, dummy_out)
+    return Mover(pipe)
 
-    assert source_file.exists() is False
-    assert destination_file.exists() is True
+
+
+def test_filter(mover):
+    reset_test_dirs()
+    assert (source / test_file).exists() is True
+    assert (destination / test_file).exists() is False
+
+    mover.run_once()
+
+    assert (source / test_file).exists() is False
+    assert (destination / test_file).exists() is True
+

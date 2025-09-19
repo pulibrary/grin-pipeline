@@ -25,8 +25,19 @@ package-dir = "src"
 [tool.pdm.scripts]
 orchestrator = "python src/pipeline/orchestrator.py"
 viewer = "python src/pipeline/token_log_viewer.py"
-lint = "basedpyright"
+# lint = "basedpyright"
+lint="ruff"
 test = "pytest"
+
+[lint]
+select = ["E", "F", "I"]
+ignore = ["E501"]
+line-length = 88
+
+[tool.ruff]
+
+
+
 
 [tool.basedpyright]
 typeCheckingMode = "basic"
@@ -44,4 +55,6 @@ dev = [
     "basedpyright>=1.28.5",
     "pytest-datadir>=1.8.0",
     "mypy>=1.17.0",
+    "isort>=6.0.1",
+    "ruff>=0.13.1",
 ]

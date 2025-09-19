@@ -19,20 +19,19 @@ class Reporter:
     what barcodes are in process, converted, available; what barcodes
     are available but have not yet been processed; etc."""
 
-    def __init__(self, grin_client:GrinClient):
+    def __init__(self, grin_client: GrinClient):
         self.grin_client = grin_client
 
-        
+
 class ObjectStoreReporter(Reporter):
-    def __init__(self, grin_client:GrinClient, s3_client:S3Client):
+    def __init__(self, grin_client: GrinClient, s3_client: S3Client):
         super().__init__(grin_client)
         self.s3_client = s3_client
-
 
     def number_of_objects_in_store(self):
         paginator = self.s3_client.client.get_paginator("list_objects_v2")
 
-        page_iterator = paginator.paginate(Bucket = self.s3_client.bucket_name)
+        page_iterator = paginator.paginate(Bucket=self.s3_client.bucket_name)
 
         count = 0
         for page in page_iterator:
@@ -40,4 +39,3 @@ class ObjectStoreReporter(Reporter):
             count += len(contents)
 
         return count
-        

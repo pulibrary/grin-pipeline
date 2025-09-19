@@ -5,14 +5,12 @@ from pipeline.plumbing import Pipe, Filter, Token
 
 
 class Requester(Filter):
-    def __init__(self, pipe:Pipe) -> None:
+    def __init__(self, pipe: Pipe) -> None:
         super().__init__(pipe)
         self.grin: GrinClient = GrinClient()
 
-
     def validate_token(self, token: Token) -> bool:
         return True
-
 
     def process_token(self, token: Token) -> bool:
         successflg = False
@@ -21,19 +19,18 @@ class Requester(Filter):
         if response is not None:
             status = response[barcode]
             self.log_to_token(token, "INFO", status)
-            successflg=True
+            successflg = True
         else:
             logging.error(f"submission of barcode for conversion failed: {barcode}")
             successflg = False
 
         return successflg
 
+
 if __name__ == "__main__":
     import argparse
 
-    
     logger: logging.Logger = logging.getLogger(__name__)
-
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", required=True)

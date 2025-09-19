@@ -34,12 +34,12 @@ SCOPES = [
 # This is the file you downloaded from console.developers.google.com when you
 # created your 'project'. You need this to generate credentials. Once you've
 # generated the credentials, you could delete this file.
-sfile = os.getenv('GOOGLE_SECRETS_FILE')
+sfile = os.getenv("GOOGLE_SECRETS_FILE")
 
 # This file contains the authorization token ('access_token') shared with GRIN,
 # and the refresh token ('refresh_token') used to issue access tokens when your
 # current token has expired.
-cfile = os.getenv('GOOGLE_TOKEN_FILE')
+cfile = os.getenv("GOOGLE_TOKEN_FILE")
 
 
 # How much we read/write when streaming response data.
@@ -241,14 +241,14 @@ class GrinClient:
     def convert_book(self, barcode: str):
         result = {}
         url = f"{self.resource_url('_process')}?barcodes={barcode}"
-        response = httpx.post(url=url, headers=self.auth_header, follow_redirects=True).raise_for_status()
+        response = httpx.post(
+            url=url, headers=self.auth_header, follow_redirects=True
+        ).raise_for_status()
         with io.StringIO(response.text) as f:
             reader = csv.DictReader(f, delimiter="\t")
             for row in reader:
                 result[row["Barcode"]] = row["Status"]
         return result
-
-
 
     def convert_books(self, barcode_list):
         responses = {}

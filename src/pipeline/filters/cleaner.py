@@ -1,4 +1,5 @@
 import os
+import sys
 import logging
 from pathlib import Path
 from pipeline.plumbing import Pipe, Filter, Token
@@ -11,14 +12,13 @@ logging.basicConfig(
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-
 class Cleaner(Filter):
     """The Cleaner simply moves the tarball from the processing bucket
     to the done bucket."""
-    def __init__(self, pipe: Pipe, finished_bucket:str="/var/tmp/done") -> None:
+
+    def __init__(self, pipe: Pipe, finished_bucket: str = "/var/tmp/done") -> None:
         super().__init__(pipe)
         self.finished_bucket = Path(finished_bucket)
-
 
     def source_file(self, token: Token) -> Path:
         input_path = Path(token.content["processing_bucket"])
@@ -30,27 +30,29 @@ class Cleaner(Filter):
         destination_path = self.finished_bucket / filename
         return destination_path
 
-
     def validate_token(self, token) -> bool:
         status: bool = True
         if self.source_file(token).exists() is False:
             logging.error(f"file to clean does not exist: {self.source_file(token)}")
             self.log_to_token(
-                token, "ERROR", f"file to clean does not exist: {self.source_file(token)}"
+                token,
+                "ERROR",
+                f"file to clean does not exist: {self.source_file(token)}",
             )
             status = False
 
         if self.finished_bucket.is_dir() is False:
             logging.error(f"target directory does not exist: {self.finished_bucket}")
             self.log_to_token(
-                token, "ERROR", f"target directory does not exist: {self.finished_bucket}"
+                token,
+                "ERROR",
+                f"target directory does not exist: {self.finished_bucket}",
             )
             status = False
-            
+
         return status
 
-
-    def process_token(self, token:Token) -> bool:
+    def process_token(self, token: Token) -> bool:
         successflg = False
         try:
             self.source_file(token).rename(self.destination_file(token))
@@ -60,6 +62,7 @@ class Cleaner(Filter):
             self.log_to_token(token, "ERROR", f"Object not moved! {e}")
             successflg = False
         return successflg
+
 
 if __name__ == "__main__":
     if "FINISHED_BUCKET" not in os.environ:
@@ -75,7 +78,10 @@ if __name__ == "__main__":
 
     pipe: Pipe = Pipe(Path(args.input), Path(args.output))
 
-    cleaner:Cleaner = Cleaner(pipe, os.environ.get("FINISHED_BUCKET"))
+    finished_bucket = os.environ.get("FINISHED_BUCKET")
+    if finished_bucket is None:
+        print("FINISHED_BUCKET environment variable is not set.")
+        sys.exit(1)
+    cleaner: Cleaner = Cleaner(pipe, finished_bucket)
     logger.info("starting cleaner")
     cleaner.run_forever()
-    

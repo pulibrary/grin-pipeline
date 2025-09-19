@@ -25,7 +25,6 @@ token = Token(token_info)
 dump_token(token, input_token_file)
 
 
-
 # Use a test filter: DoNothing just logs
 # to the token.
 

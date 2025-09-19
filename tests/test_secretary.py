@@ -5,6 +5,7 @@ from pipeline.book_ledger import BookLedger
 from pipeline.token_bag import TokenBag
 from pipeline.secretary import Secretary
 
+
 def test_sizes(shared_datadir):
     ledger = BookLedger(shared_datadir / "test_ledger.csv")
     bag = TokenBag(shared_datadir / "tokens")
@@ -14,10 +15,11 @@ def test_sizes(shared_datadir):
     assert len(secretary.unprocessed_books) == 9
     assert len(secretary.chosen_books) == 0
 
+
 def test_choose_book(shared_datadir):
     bag_dir = shared_datadir / "tokens"
     ledger_file = shared_datadir / "test_ledger.csv"
-    
+
     with tempfile.TemporaryDirectory() as tmpdir:
         test_token_dir = Path(tmpdir) / "tokens"
         shutil.copytree(bag_dir, test_token_dir)
@@ -25,24 +27,24 @@ def test_choose_book(shared_datadir):
         test_ledger_file = Path(tmpdir) / "ledger.csv"
         shutil.copy(ledger_file, test_ledger_file)
 
-        secretary = Secretary(TokenBag(test_token_dir),
-                              BookLedger(test_ledger_file))
+        secretary = Secretary(TokenBag(test_token_dir), BookLedger(test_ledger_file))
 
-        barcode = '32101078166681'
+        barcode = "32101078166681"
 
         book = secretary.find_in_ledger(barcode)
         assert book is not None and book.status is None
         assert secretary.find_in_bag(barcode) is None
-        
+
         secretary.choose_book(barcode)
 
-        assert book.status == 'chosen'
+        assert book.status == "chosen"
         assert secretary.find_in_bag(barcode) is not None
-        
+
+
 def test_choose_books(shared_datadir):
     bag_dir = shared_datadir / "tokens"
     ledger_file = shared_datadir / "test_ledger.csv"
-    
+
     with tempfile.TemporaryDirectory() as tmpdir:
         test_token_dir = Path(tmpdir) / "tokens"
         shutil.copytree(bag_dir, test_token_dir)
@@ -50,8 +52,7 @@ def test_choose_books(shared_datadir):
         test_ledger_file = Path(tmpdir) / "ledger.csv"
         shutil.copy(ledger_file, test_ledger_file)
 
-        secretary = Secretary(TokenBag(test_token_dir),
-                              BookLedger(test_ledger_file))
+        secretary = Secretary(TokenBag(test_token_dir), BookLedger(test_ledger_file))
 
         pretest_bag_size = secretary.bag_size
         pretest_chosen_books = secretary.chosen_books

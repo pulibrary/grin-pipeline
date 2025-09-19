@@ -12,21 +12,19 @@ class Token:
     def __init__(self, content: dict):
         self.content = content
 
-
     def __repr__(self) -> str:
         return f"Token({self.name})"
 
-    def get_prop(self, prop)-> str | None:
+    def get_prop(self, prop) -> str | None:
         return self.content.get(prop)
 
-    def put_prop(self, prop:str, val:str) -> str | None:
+    def put_prop(self, prop: str, val: str) -> str | None:
         self.content[prop] = val
         return self.get_prop(val)
 
     @property
     def name(self) -> str | None:
-        return self.get_prop('barcode')
-            
+        return self.get_prop("barcode")
 
     def write_log(
         self, message: str, level: Optional[str] = None, stage: Optional[str] = None
@@ -39,14 +37,17 @@ class Token:
 
         self.content.setdefault("log", []).append(entry)
 
+
 # Utilities for reading and writing Tokens
 
-def load_token(token_file:Path) -> Token:
-    with token_file.open('r') as f:
+
+def load_token(token_file: Path) -> Token:
+    with token_file.open("r") as f:
         token_info = json.load(f)
         return Token(token_info)
 
-def dump_token(token, destination:Path) -> None:
+
+def dump_token(token, destination: Path) -> None:
     with destination.open("w+") as f:
         json.dump(token.content, fp=f, indent=2)
 
@@ -60,13 +61,12 @@ class Pipe:
     def __repr__(self) -> str:
         return f"Pipe('{self.input}', '{self.output}')"
 
-
     def in_path(self, token) -> Path:
         if token is not None and token.name is not None:
             return self.input / Path(token.name).with_suffix(".json")
         else:
             raise ValueError("no token or token name")
-    
+
     def out_path(self, token) -> Path:
         if self.token and self.token.name:
             return self.output / Path(token.name).with_suffix(".json")
@@ -84,7 +84,6 @@ class Pipe:
             return self.input / Path(token.name).with_suffix(".err")
         else:
             raise ValueError("no token or token name")
-
 
     @property
     def token_in_path(self) -> Path:
@@ -104,14 +103,14 @@ class Pipe:
     @property
     def token_marked_path(self) -> Path:
         if self.token and self.token.name:
-            return self.input 
+            return self.input
         else:
             raise ValueError("pipe doesn't contain a token")
 
     @property
     def token_error_path(self) -> Path:
         if self.token and self.token.name:
-            return self.input 
+            return self.input
         else:
             raise ValueError("pipe doesn't contain a token")
 
@@ -131,18 +130,18 @@ class Pipe:
 
     def mark_token(self):
         if self.token and self.token.name:
-            unmarked_path:Path = self.in_path(self.token)
-            marked_path:Path = self.marked_path(self.token)
+            unmarked_path: Path = self.in_path(self.token)
+            marked_path: Path = self.marked_path(self.token)
             if unmarked_path.is_file():
                 unmarked_path.rename(marked_path)
-
+            else:
+                FileNotFoundError(f"{unmarked_path} does not exist")
 
     def delete_marked_token(self):
-        marked_path:Path = self.marked_path(self.token)
+        marked_path: Path = self.marked_path(self.token)
         marked_path.unlink()
 
     def put_token(self, errorFlg: bool = False) -> None:
-
         if self.token:
             if errorFlg:
                 error_path = self.error_path(self.token)
@@ -159,7 +158,7 @@ class Pipe:
                 put_back_path = self.error_path(self.token)
             else:
                 put_back_path = self.in_path(self.token)
-                
+
             dump_token(self.token, put_back_path)
 
             self.delete_marked_token()
@@ -217,36 +216,36 @@ class Filter:
     def validate_token(self, token: Token) -> bool:
         raise NotImplementedError("Subclasses must implement this")
 
+
 class Pipeline:
-    def __init__(self, config:dict):
+    def __init__(self, config: dict):
         self.config = config
         self.buckets = {}
         for rec in self.config.get("buckets", {}):
             name = rec.get("name", "")
-            location =  Path(rec.get("path", "/dev/null"))
+            location = Path(rec.get("path", "/dev/null"))
             self.add_bucket(name, location)
 
-    def add_bucket(self, name:str, location:Path):
+    def add_bucket(self, name: str, location: Path):
         self.buckets[name] = location
 
-    def bucket(self, name:str) -> Path:
+    def bucket(self, name: str) -> Path:
         if p := self.buckets.get(name):
             return p
         else:
             raise ValueError(f"no such bucket: {name}")
 
-
-    def pipe(self, in_bucket:str, out_bucket:str):
+    def pipe(self, in_bucket: str, out_bucket: str):
         return Pipe(self.bucket(in_bucket), self.bucket(out_bucket))
-
 
     @property
     def snapshot(self):
         buckets = {}
         for name, location in self.buckets.items():
-            info = { 'waiting_tokens' : [f.name for f in Path(location).glob('*.json')],
-                     'errored_tokens' : [f.name for f in Path(location).glob('*.err')],
-                     'in_process_tokens' : [f.name for f in Path(location).glob('*.bak')]
+            info = {
+                "waiting_tokens": [f.name for f in Path(location).glob("*.json")],
+                "errored_tokens": [f.name for f in Path(location).glob("*.err")],
+                "in_process_tokens": [f.name for f in Path(location).glob("*.bak")],
             }
             buckets[name] = info
         return buckets

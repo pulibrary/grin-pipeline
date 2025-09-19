@@ -1,12 +1,13 @@
 from pathlib import Path
 import shutil
 import pytest
-from pipeline.plumbing import Token, Pipe, load_token, dump_token
+from pipeline.plumbing import Token, Pipe, dump_token
 
 test_dir = Path("/tmp/test_pipe")
 dummy_in = test_dir / "in"
 dummy_out = test_dir / "out"
 barcode = "12345678"
+
 
 def reset_test_dirs():
     if test_dir.is_dir():
@@ -16,22 +17,20 @@ def reset_test_dirs():
             print(f"error deleting path {test_dir} : {e}")
     dummy_in.mkdir(parents=True)
     dummy_out.mkdir(parents=True)
-    token = Token({"barcode" : barcode})
-    token_path = dummy_in / Path(barcode).with_suffix('.json')
+    token = Token({"barcode": barcode})
+    token_path = dummy_in / Path(barcode).with_suffix(".json")
     dump_token(token, token_path)
-        
-            
-        
+
 
 @pytest.fixture
 def test_token():
-    tok = Token({"barcode" : barcode})
+    tok = Token({"barcode": barcode})
     return tok
 
 
 @pytest.fixture
 def test_pipe():
-    pipe:Pipe = Pipe(dummy_in, dummy_out)
+    pipe: Pipe = Pipe(dummy_in, dummy_out)
     return pipe
 
 
@@ -48,14 +47,12 @@ def test_take_token(test_pipe):
     backup_name = Path(f"{dummy_in}/{barcode}.bak")
     assert test_pipe.token is None
     assert filename in list(dummy_in.glob("*.*"))
-    assert backup_name not  in list(dummy_in.glob("*.*"))
+    assert backup_name not in list(dummy_in.glob("*.*"))
 
     test_pipe.take_token()
     assert test_pipe.token is not None
     assert filename not in list(dummy_in.glob("*.*"))
     assert backup_name in list(dummy_in.glob("*.*"))
-
-
 
 
 def test_put_token(test_pipe):
@@ -74,4 +71,3 @@ def test_put_token_with_errorFlg(test_pipe):
     out_files = list(dummy_in.glob("*.err"))
     error_filename = Path(f"{dummy_in}/{barcode}.err")
     assert error_filename in out_files
-    

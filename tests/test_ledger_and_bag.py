@@ -5,8 +5,6 @@ from pipeline.book_ledger import BookLedger, Book
 from pipeline.token_bag import TokenBag
 
 
-
-
 def test_add_to_bag_from_ledger(shared_datadir):
     bag_dir = shared_datadir / "tokens"
     ledger_file = shared_datadir / "test_ledger.csv"
@@ -27,17 +25,15 @@ def test_add_to_bag_from_ledger(shared_datadir):
         ledger = BookLedger(test_ledger_file)
         assert len(ledger.books) == 9
 
-        barcode = '32101078166681'
+        barcode = "32101078166681"
 
-        book:Book | None = ledger.entry(barcode)
+        book: Book | None = ledger.entry(barcode)
         assert book is not None and book.status is None
 
-        chosen_book:Book | None = ledger.choose_book(barcode)
+        chosen_book: Book | None = ledger.choose_book(barcode)
         assert chosen_book == book
         assert chosen_book is not None
-        assert chosen_book.status == 'chosen'
+        assert chosen_book.status == "chosen"
         assert len(bag.tokens) == 2
         bag.add_book(chosen_book.barcode)
         assert len(bag.tokens) == 3
-
-        

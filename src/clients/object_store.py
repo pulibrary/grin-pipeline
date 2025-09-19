@@ -14,23 +14,21 @@ class ObjectStore:
 
 
 class S3Client(ObjectStore):
-    def __init__(self, local_cache:Path, bucket_name:str = 'google-books-dev'):
+    def __init__(self, local_cache: Path, bucket_name: str = "google-books-dev"):
         super().__init__()
         self.object_service = "Amazon S3"
         self.bucket_name = bucket_name
         self.cache = local_cache
-        self.client = boto3.client('s3')
+        self.client = boto3.client("s3")
 
-    def object_exists(self, key:str) -> bool:
+    def object_exists(self, key: str) -> bool:
         try:
             self.client.get_object_attributes(
-                Bucket=self.bucket_name,
-                Key=key,
-                ObjectAttributes=['ETag'])
+                Bucket=self.bucket_name, Key=key, ObjectAttributes=["ETag"]
+            )
             return True
         except self.client.exceptions.NoSuchKey:
             return False
-
 
     def store_file(self, file_path, object_name=None) -> bool:
         if object_name is None:
@@ -55,7 +53,3 @@ class S3Client(ObjectStore):
             else:
                 result = self.store_file(file_path, barcode)
         return result
-            
-            
-
-        

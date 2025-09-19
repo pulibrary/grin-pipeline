@@ -38,10 +38,10 @@ class Orchestrator:
             "--output",
             out_bucket,
         ]
-        if filt.get('args'):
-            for k,v in filt.get('args').items():
+        if filt.get("args"):
+            for k, v in filt.get("args").items():
                 extra_env[k] = v
-                
+
         # if "decryption_passphrase" in filt:
         #     extra_env["DECRYPTION_PASSPHRASE"] = filt["decryption_passphrase"]
 
@@ -51,11 +51,9 @@ class Orchestrator:
         # if "local_dir" in filt:
         #     extra_env["LOCAL_DIR"] = filt["local_dir"]
         logging.info("Starting filter: %s", " ".join(cmd))
-        
+
         proc = subprocess.Popen(cmd, env={**os.environ, **extra_env})
         self.processes.append((filt["name"], proc))
-
-
 
     def start_filter_old(self, filt):
         extra_env = {}
@@ -138,7 +136,7 @@ class Orchestrator:
                 self.stop_filters()
                 break
 
-    def run(self, repl:bool=True):
+    def run(self, repl: bool = True):
         def shutdown_handler(signum, frame):
             print("\nShutting down Orchestrator...")
             self.stop_filters()
@@ -152,14 +150,13 @@ class Orchestrator:
             self.repl()
 
 
-
 if __name__ == "__main__":
     # if 'GPG_PASSPHRASE' not in os.environ:
     #     print("Please set the GPG_PASSPHRASE environment variable.")
     #     sys.exit(1)
     if "PIPELINE_CONFIG" not in os.environ:
-         print("Please set the PIPELINE_CONFIG environment variable.")
-         sys.exit(1)
+        print("Please set the PIPELINE_CONFIG environment variable.")
+        sys.exit(1)
 
     # config_file = 'config.yml.gpg'
     # config_file = 'config.yml'
