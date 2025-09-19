@@ -17,7 +17,6 @@ logger: logging.Logger = logging.getLogger(__name__)
 class Downloader(Filter):
     def __init__(self, pipe: Pipe):
         super().__init__(pipe)
-        self.grin_client: GrinClient = GrinClient()
 
     def validate_token(self, token: Token) -> bool:
         return True
@@ -26,7 +25,8 @@ class Downloader(Filter):
         completed: bool = False
         barcode = token.content["barcode"]
         dest = str(Path(token.content["processing_bucket"]))
-        self.grin_client.download_book(barcode, dest)
+        grin_client = GrinClient()
+        grin_client.download_book(barcode, dest)
         completed = True
         return completed
 
