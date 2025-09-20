@@ -86,26 +86,13 @@ class RequestMonitor(Monitor):
 
 
     def run(self):
-        flg = True
-        while flg is True:
-            token = self.pipe.take_token()
-            if token is None:
-                flg = False
-                break
-
-            if self.is_in_process(token):
-                logger.info(f"conversion pending: {token}")
-                token.write_log("conversion pending", "INFO", "Monitor")
-                self.pipe.put_token_back()
-
-            elif self.is_converted(token):
-                logger.info(f"conversion complete: {token}")
+        for f in self.pipe.input.glob("*.json"):
+            token = load_token(f)
+            if self.is_converted(token):
                 token.write_log("conversion complete", "INFO", "Monitor")
-                self.pipe.put_token()
-
-            else:
-                raise ValueError(f"{token} is neither pending nor converted")
-            
+                path = self.pipe.output / Path(token.name).with_suffix(".json")
+                dump_token(token, path)
+                Path(f).unlink()
 
 
 

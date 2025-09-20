@@ -158,6 +158,14 @@ class Pipe:
         else:
             raise ValueError("pipe doesn't contain a token")
 
+    def list_input_tokens(self) -> list[Token] | None:
+        all_tokens = []
+        for f in self.input.glob("*.json"):
+            all_tokens.append(load_token(f))
+        return all_tokens
+            
+    
+
     def take_token(self):
         """Take the next available token from the input bucket.
 
