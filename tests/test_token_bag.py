@@ -85,8 +85,9 @@ def test_take_token(shared_datadir):
         bag = TokenBag(test_bag_dir)
         bag.load()
         assert len(bag.tokens) == 2
-        tok = bag.find(barcode)
-        assert tok is not None
+        # tok = bag.find(barcode)
+        tok = bag.take_token(barcode)
+        assert tok is not None and tok.get_prop('barcode') == barcode
 
         assert len(bag.tokens) == 1
 

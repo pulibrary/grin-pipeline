@@ -30,40 +30,50 @@ class RequestMonitor(Monitor):
         super().__init__(pipeline)
         self.client = GrinClient()
         self.pipe = self.pipeline.pipe("requested", "converted")
-        self._converted_barcodes = None
-        self._in_process_barcodes = None
+
 
     @property
-    def converted(self):
-        if self._converted_barcodes is None:
-            grin_converted_books = self.client.converted_books
-            if grin_converted_books is not None:
-                self._converted_barcodes = [
-                    rec["barcode"] for rec in grin_converted_books
-                ]
-        return self._converted_barcodes
+    def converted_barcodes(self) -> list[str] | None:
+        converted_barcodes: list[str] | None = []
+        grin_converted_books = self.client.converted_books
+        if grin_converted_books is not None:
+            converted_barcodes = [
+                rec["barcode"] for rec in grin_converted_books
+            ]
+        return converted_barcodes
+
 
     @property
-    def in_process(self):
-        if self._in_process_barcodes is None:
-            grin_in_process_books = self.client.in_process_books
-            if grin_in_process_books is not None:
-                self._in_process_barcodes = [
+    def in_process_barcodes(self) -> list[str] | None:
+        in_process_barcodes: list[str] | None = []
+        grin_in_process_books = self.client.in_process_books
+        if grin_in_process_books is not None:
+                in_process_barcodes = [
                     rec["barcode"] for rec in grin_in_process_books
                 ]
-        return self._in_process_barcodes
+        return in_process_barcodes
+
 
     def is_in_process(self, token: Token) -> bool:
-        if self.in_process:
-            return token.get_prop("barcode") in self.in_process
-        else:
-            return False
+        return token.get_prop("barcode") in self.in_process_barcodes
+
 
     def is_converted(self, token: Token) -> bool:
-        if self.converted:
-            return token.get_prop("barcode") in self.converted
-        else:
-            return False
+        return token.get_prop("barcode") in self.converted_barcodes
+
+
+    def report(self) -> dict[str, list[Token]]:
+        report = {}
+        report['pending'] = []
+        report['converted'] = []
+        for f in self.pipe.input.glob("*.json"):
+            token = load_token(f)
+            if self.is_in_process(token):
+                report['pending'].append(token)
+            if self.is_converted(token):
+                report['converted'].append(token)
+        return report
+        
 
     def dry_run(self):
         print("barcode\tin_process\tconverted")
@@ -74,28 +84,29 @@ class RequestMonitor(Monitor):
             converted_p = self.is_converted(tok)
             print(f"{barcode}\t{requested_p}\t{converted_p}")
 
+
     def run(self):
-        tokens_to_process = self.pipe.input.glob("*.json")
-        for token_path in tokens_to_process:
-            token: Token = load_token(token_path)
+        flg = True
+        while flg is True:
+            token = self.pipe.take_token()
+            if token is None:
+                flg = False
+                break
 
-            requested_p = self.is_in_process(token)
-            converted_p = self.is_converted(token)
+            if self.is_in_process(token):
+                logger.info(f"conversion pending: {token}")
+                token.write_log("conversion pending", "INFO", "Monitor")
+                self.pipe.put_token_back()
 
-            if requested_p:
-                logger.info(f"conversion in process: {token}")
-                token.write_log("conversion in process", "INFO", "Monitor")
-                dump_token(
-                    token, self.pipe.input / Path(token.name).with_suffix(".json")
-                )
-
-            elif converted_p:
+            elif self.is_converted(token):
                 logger.info(f"conversion complete: {token}")
                 token.write_log("conversion complete", "INFO", "Monitor")
-                dump_token(
-                    token, self.pipe.output / Path(token.name).with_suffix(".json")
-                )
-                token_path.unlink()
+                self.pipe.put_token()
+
+            else:
+                raise ValueError(f"{token} is neither pending nor converted")
+            
+
 
 
 if __name__ == "__main__":

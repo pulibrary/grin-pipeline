@@ -24,9 +24,12 @@ class Cleaner(Filter):
         finished_bucket (Path): Directory where completed files are stored
     """
 
-    def __init__(self, pipe: Pipe, finished_bucket: str = "/var/tmp/done") -> None:
+    def __init__(self, pipe: Pipe, finished_bucket: str | None = None) -> None:
         super().__init__(pipe)
-        self.finished_bucket = Path(finished_bucket)
+        if finished_bucket is not None:
+            self.finished_bucket = Path(finished_bucket)
+        else:
+            self.finisehd_bucket = Path('/dev/null')
 
     def source_file(self, token: Token) -> Path:
         """Get the path to the source file to be moved.
