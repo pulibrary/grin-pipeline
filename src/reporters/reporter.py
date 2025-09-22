@@ -1,8 +1,11 @@
 import os
+from io import StringIO
 import logging
 from pipeline.config_loader import load_config
 from clients import GrinClient
 from clients import S3Client
+from collections import namedtuple
+from csv import DictWriter
 
 config_path: str = os.environ.get("PIPELINE_CONFIG", "config.yml")
 config: dict = load_config(config_path)
@@ -12,6 +15,7 @@ log_level = getattr(logging, config.get("global", {}).get("log_level", "INFO").u
 
 logging.basicConfig(level=log_level)
 
+S3Rec = namedtuple('S3Rec', ['Key', 'LastModified', 'ETag', 'ChecksumAlgorithm', 'ChecksumType', 'Size', 'StorageClass'])
 
 class Reporter:
     """Family of classes that gather information about aspects of GRIN
@@ -22,20 +26,46 @@ class Reporter:
     def __init__(self, grin_client: GrinClient):
         self.grin_client = grin_client
 
+    def report(self, **kwargs) -> dict:
+        pass
+
 
 class ObjectStoreReporter(Reporter):
     def __init__(self, grin_client: GrinClient, s3_client: S3Client):
         super().__init__(grin_client)
         self.s3_client = s3_client
 
-    def number_of_objects_in_store(self):
+
+    def objects_in_store(self):
         paginator = self.s3_client.client.get_paginator("list_objects_v2")
 
         page_iterator = paginator.paginate(Bucket=self.s3_client.bucket_name)
-
-        count = 0
+        objects = []
         for page in page_iterator:
             contents = page.get("Contents", [])
-            count += len(contents)
+            for object in contents:
+                objects.append(S3Rec(**object))
 
-        return count
+        return objects
+
+    def format_as_table(self, oblist):
+        with StringIO() as out_buf:
+            writer = DictWriter(out_buf, S3Rec._fields)
+            writer.writeheader()
+            for ob in oblist:
+                writer.writerow(ob._asdict())
+            csv_string = out_buf.getvalue()
+        return csv_string
+
+
+
+    def report(self, **kwargs):
+        format:str = kwargs.get('format')
+        match format:
+            case "table":
+                print(self.format_as_table(self.objects_in_store()))
+            case "barcodes":
+                for ob in self.objects_in_store():
+                    print(ob.Key)
+            case _:
+                print("no format")
