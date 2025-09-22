@@ -28,7 +28,7 @@ class Cleaner(Filter):
         if finished_bucket is not None:
             self.finished_bucket = Path(finished_bucket)
         else:
-            self.finisehd_bucket = Path('/dev/null')
+            self.finished_bucket = Path('/dev/null')
 
     def source_file(self, token: Token) -> Path:
         """Get the path to the source file to be moved.
@@ -124,7 +124,7 @@ class SeedingCleaner(Cleaner):
     def __init__(self, pipe: Pipe, finished_bucket: str | None = None,
                  token_bag:str | None = None,
                  converted_bucket:str | None = None) -> None:
-        super().__init__(pipe)
+        super().__init__(pipe, finished_bucket)
         if converted_bucket is not None:
             self.converted_bucket = Path(converted_bucket)
 
