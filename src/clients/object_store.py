@@ -5,7 +5,10 @@
 # system.
 
 from pathlib import Path
+from collections import namedtuple
 import boto3
+
+S3Object = namedtuple('S3Rec', ['Key', 'LastModified', 'ETag', 'ChecksumAlgorithm', 'ChecksumType', 'Size', 'StorageClass'])
 
 
 class ObjectStore:
@@ -53,3 +56,14 @@ class S3Client(ObjectStore):
             else:
                 result = self.store_file(file_path, barcode)
         return result
+
+    def list_objects(self):
+        paginator = self.client.get_paginator("list_objects_v2")
+
+        page_iterator = paginator.paginate(Bucket=self.bucket_name)
+        objects = []
+        for page in page_iterator:
+            contents = page.get("Contents", [])
+            for object in contents:
+                objects.append(S3Object(**object))
+        return objects
