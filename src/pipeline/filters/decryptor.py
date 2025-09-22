@@ -108,6 +108,7 @@ class Decryptor(Filter):
         else:
             successflg = True
             token.content["decryption_status"] = "success"
+            self.infile(token).unlink()
             self.log_to_token(token, "INFO", "Decryption successful")
 
         return successflg
