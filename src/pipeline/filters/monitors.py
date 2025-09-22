@@ -62,6 +62,7 @@ class RequestMonitor(Monitor):
         return token.get_prop("barcode") in self.converted_barcodes
 
 
+
     def report(self) -> dict[str, list[Token]]:
         report = {}
         report['pending'] = []
@@ -100,4 +101,4 @@ if __name__ == "__main__":
     config_path: str = os.environ.get("PIPELINE_CONFIG", "config.yml")
     config: dict = load_config(config_path)
 
-    monitor = Monitor(Pipeline(config))
+    monitor = RequestMonitor(Pipeline(config))
