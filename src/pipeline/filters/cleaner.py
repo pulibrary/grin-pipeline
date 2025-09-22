@@ -16,9 +16,8 @@ class Cleaner(Filter):
     """
     Final cleanup filter that moves processed files to a finished directory.
 
-    The Cleaner filter performs the final stage of processing by moving
-    successfully processed tarball files from the processing bucket to
-    a 'done' directory for archival.
+    The Cleaner filter performs the final stage of processing by deleting
+    the processed tarball.
 
     Attributes:
         finished_bucket (Path): Directory where completed files are stored
@@ -111,6 +110,60 @@ class Cleaner(Filter):
         return successflg
 
 
+
+class SeedingCleaner(Cleaner):
+    """
+    An intermediate cleaner, while we work through the
+    backlogged converted pile.
+
+    This cleaner deletes the processed tarball to free space
+    and then moves a new token from the token_bag to the
+    converted_bucket.
+    """
+
+    def __init__(self, pipe: Pipe, finished_bucket: str | None = None,
+                 token_bag:str | None = None,
+                 converted_bucket:str | None = None) -> None:
+        super().__init__(pipe)
+        if converted_bucket is not None:
+            self.converted_bucket = Path(converted_bucket)
+
+        if token_bag is not None:
+            self.token_bag = Path(token_bag)
+
+    def process_token(self, token: Token, retain_file=False) -> bool:
+        successflg = False
+        try:
+            if retain_file is True:
+                self.source_file(token).rename(self.destination_file(token))
+                self.log_to_token(token, "INFO", "Object moved to done")
+            else:
+                self.source_file(token).unlink()
+                self.log_to_token(token, "INFO", "Object deleted")
+            successflg = True
+        except PermissionError as e:
+            self.log_to_token(token, "ERROR", f"Object not moved! {e}")
+            successflg = False
+
+        if successflg:
+            try:
+                # Use a generator expression to find the first file and next() to retrieve it
+                first_file = next((item for item in self.token_bag.iterdir()
+                                   if item.is_file()), None)
+                
+                target_file = self.converted_bucket / first_file.name
+                first_file.rename(target_file)
+                successflg = True
+
+            except FileNotFoundError as e:
+                successflg = False
+
+        return successflg
+        
+
+
+
+
 if __name__ == "__main__":
     if "FINISHED_BUCKET" not in os.environ:
         print("Please set the FINISHED_BUCKET environment variable.")
@@ -126,9 +179,19 @@ if __name__ == "__main__":
     pipe: Pipe = Pipe(Path(args.input), Path(args.output))
 
     finished_bucket = os.environ.get("FINISHED_BUCKET")
+    token_bag = os.environ.get("TOKEN_BAG")
+    converted_bucket = os.environ.get("CONVERTED_BUCKET")
+
     if finished_bucket is None:
         print("FINISHED_BUCKET environment variable is not set.")
         sys.exit(1)
-    cleaner: Cleaner = Cleaner(pipe, finished_bucket)
+    if token_bag is None:
+        print("TOKEN_BAG environment variable is not set.")
+        sys.exit(1)
+    if converted_bucket is None:
+        print("CONVERTED_BUCKET environment variable is not set.")
+        sys.exit(1)
+    cleaner: Cleaner = SeedingCleaner(pipe, finished_bucket, token_bag, converted_bucket)
     logger.info("starting cleaner")
     cleaner.run_forever()
+
