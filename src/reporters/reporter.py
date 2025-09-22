@@ -48,7 +48,9 @@ class ObjectStoreReporter(Reporter):
 
         return objects
 
-    def format_as_table(self, oblist):
+
+
+    def format_as_table_to_print(self, oblist):
         with StringIO() as out_buf:
             writer = DictWriter(out_buf, S3Rec._fields)
             writer.writeheader()
