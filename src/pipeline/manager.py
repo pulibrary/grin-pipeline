@@ -79,7 +79,7 @@ class Manager:
                 "fn": lambda: self.request_monitor.dry_run(),
             },
             "request monitor": {
-                "help": "request monitor dry run",
+                "help": "request monitor run",
                 "fn": lambda: self.request_monitor.run(),
             },
             "stage": {
