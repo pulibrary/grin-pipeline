@@ -87,7 +87,7 @@ class Cleaner(Filter):
 
         return status
 
-    def process_token(self, token: Token) -> bool:
+    def process_token(self, token: Token, retain_file=False) -> bool:
         """Move the processed file to the finished directory.
 
         Args:
@@ -98,8 +98,12 @@ class Cleaner(Filter):
         """
         successflg = False
         try:
-            self.source_file(token).rename(self.destination_file(token))
-            self.log_to_token(token, "INFO", "Object moved to done")
+            if retain_file is True:
+                self.source_file(token).rename(self.destination_file(token))
+                self.log_to_token(token, "INFO", "Object moved to done")
+            else:
+                self.source_file(token).unlink()
+                self.log_to_token(token, "INFO", "Object deleted")
             successflg = True
         except PermissionError as e:
             self.log_to_token(token, "ERROR", f"Object not moved! {e}")
