@@ -16,6 +16,7 @@ class Secretary:
         bag (TokenBag): The token bag for storing selected books
         ledger (BookLedger): The book ledger containing available books
     """
+
     def __init__(self, bag: TokenBag, ledger: BookLedger) -> None:
         self.bag = bag
         self.ledger = ledger

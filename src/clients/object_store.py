@@ -8,7 +8,18 @@ from pathlib import Path
 from collections import namedtuple
 import boto3
 
-S3Object = namedtuple('S3Rec', ['Key', 'LastModified', 'ETag', 'ChecksumAlgorithm', 'ChecksumType', 'Size', 'StorageClass'])
+S3Object = namedtuple(
+    "S3Rec",
+    [
+        "Key",
+        "LastModified",
+        "ETag",
+        "ChecksumAlgorithm",
+        "ChecksumType",
+        "Size",
+        "StorageClass",
+    ],
+)
 
 
 class ObjectStore:

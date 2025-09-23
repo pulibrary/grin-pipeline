@@ -58,7 +58,9 @@ class Synchronizer:
         ]
         return unchosen
 
-    def synchronize(self, out_of_sync_only:bool = False, stage: bool = True) -> list[Book] | None:
+    def synchronize(
+        self, out_of_sync_only: bool = False, stage: bool = True
+    ) -> list[Book] | None:
         """
         Synchronize ledger and bag with the converted books in GRIN.
 
@@ -68,13 +70,13 @@ class Synchronizer:
         :return: list of chosen books
         :rtype: list[Book] | None
         """
-        
+
         if out_of_sync_only is True:
             barcodes = self.out_of_sync_barcodes
         else:
             barcodes = [rec["barcode"] for rec in self.client.converted_books]
 
-        chosen:list[Book] | None = []
+        chosen: list[Book] | None = []
         for barcode in barcodes:
             chosen.append(self.secretary.choose_book(barcode))
 

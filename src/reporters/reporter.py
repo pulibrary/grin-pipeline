@@ -15,7 +15,19 @@ log_level = getattr(logging, config.get("global", {}).get("log_level", "INFO").u
 
 logging.basicConfig(level=log_level)
 
-S3Rec = namedtuple('S3Rec', ['Key', 'LastModified', 'ETag', 'ChecksumAlgorithm', 'ChecksumType', 'Size', 'StorageClass'])
+S3Rec = namedtuple(
+    "S3Rec",
+    [
+        "Key",
+        "LastModified",
+        "ETag",
+        "ChecksumAlgorithm",
+        "ChecksumType",
+        "Size",
+        "StorageClass",
+    ],
+)
+
 
 class Reporter:
     """Family of classes that gather information about aspects of GRIN
@@ -35,7 +47,6 @@ class ObjectStoreReporter(Reporter):
         super().__init__(grin_client)
         self.s3_client = s3_client
 
-
     def objects_in_store(self):
         paginator = self.s3_client.client.get_paginator("list_objects_v2")
 
@@ -48,8 +59,6 @@ class ObjectStoreReporter(Reporter):
 
         return objects
 
-
-
     def format_as_table_to_print(self, oblist):
         with StringIO() as out_buf:
             writer = DictWriter(out_buf, S3Rec._fields)
@@ -59,10 +68,8 @@ class ObjectStoreReporter(Reporter):
             csv_string = out_buf.getvalue()
         return csv_string
 
-
-
     def report(self, **kwargs):
-        format:str = kwargs.get('format')
+        format: str = kwargs.get("format")
         match format:
             case "table":
                 print(self.format_as_table(self.objects_in_store()))

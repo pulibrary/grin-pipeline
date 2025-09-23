@@ -21,6 +21,7 @@ class Uploader(Filter):
     Provides common functionality for validating and uploading files,
     with specific implementations for different storage backends.
     """
+
     def __init__(self, pipe: Pipe) -> None:
         super().__init__(pipe)
 
@@ -61,6 +62,7 @@ class AWSUploader(Uploader):
     Attributes:
         client (S3Client): S3 client for storage operations
     """
+
     def __init__(self, pipe: Pipe, s3_client: S3Client) -> None:
         super().__init__(pipe)
         self.client = s3_client

@@ -28,7 +28,7 @@ class Cleaner(Filter):
         if finished_bucket is not None:
             self.finished_bucket = Path(finished_bucket)
         else:
-            self.finished_bucket = Path('/dev/null')
+            self.finished_bucket = Path("/dev/null")
 
     def source_file(self, token: Token) -> Path:
         """Get the path to the source file to be moved.
@@ -110,7 +110,6 @@ class Cleaner(Filter):
         return successflg
 
 
-
 class SeedingCleaner(Cleaner):
     """
     An intermediate cleaner, while we work through the
@@ -121,9 +120,13 @@ class SeedingCleaner(Cleaner):
     converted_bucket.
     """
 
-    def __init__(self, pipe: Pipe, finished_bucket: str | None = None,
-                 token_bag:str | None = None,
-                 converted_bucket:str | None = None) -> None:
+    def __init__(
+        self,
+        pipe: Pipe,
+        finished_bucket: str | None = None,
+        token_bag: str | None = None,
+        converted_bucket: str | None = None,
+    ) -> None:
         super().__init__(pipe, finished_bucket)
         if converted_bucket is not None:
             self.converted_bucket = Path(converted_bucket)
@@ -148,20 +151,18 @@ class SeedingCleaner(Cleaner):
         if successflg:
             try:
                 # Use a generator expression to find the first file and next() to retrieve it
-                first_file = next((item for item in self.token_bag.iterdir()
-                                   if item.is_file()), None)
-                
+                first_file = next(
+                    (item for item in self.token_bag.iterdir() if item.is_file()), None
+                )
+
                 target_file = self.converted_bucket / first_file.name
                 first_file.rename(target_file)
                 successflg = True
 
-            except FileNotFoundError as e:
+            except FileNotFoundError:
                 successflg = False
 
         return successflg
-        
-
-
 
 
 if __name__ == "__main__":
@@ -191,7 +192,8 @@ if __name__ == "__main__":
     if converted_bucket is None:
         print("CONVERTED_BUCKET environment variable is not set.")
         sys.exit(1)
-    cleaner: Cleaner = SeedingCleaner(pipe, finished_bucket, token_bag, converted_bucket)
+    cleaner: Cleaner = SeedingCleaner(
+        pipe, finished_bucket, token_bag, converted_bucket
+    )
     logger.info("starting cleaner")
     cleaner.run_forever()
-

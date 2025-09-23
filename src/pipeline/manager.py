@@ -33,6 +33,7 @@ class Manager:
         processes (list): List of running subprocess references
         commands (dict): Available REPL commands and their handlers
     """
+
     def __init__(self, config: dict):
         self.config = config
         self.ledger = BookLedger(config["global"]["ledger_file"])
@@ -164,6 +165,7 @@ class Manager:
         Sets up SIGINT and SIGTERM handlers and starts the REPL interface.
         The manager will handle Ctrl+C and termination signals gracefully.
         """
+
         def shutdown_handler(signum, frame):
             print("\nShutting down Manager...")
             # do other things

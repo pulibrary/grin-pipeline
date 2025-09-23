@@ -29,6 +29,7 @@ class Orchestrator:
         processes (list): List of tuples containing (filter_name, subprocess.Popen)
         pipeline (Pipeline): Pipeline instance for bucket management
     """
+
     def __init__(self) -> None:
         self.processes = []
         self.pipeline = Pipeline(config)
@@ -76,7 +77,6 @@ class Orchestrator:
         proc = subprocess.Popen(cmd, env={**os.environ, **extra_env})
         # Track the process for lifecycle management
         self.processes.append((filt["name"], proc))
-
 
     def stop_filters(self):
         """Stop all running filter processes gracefully.
@@ -163,6 +163,7 @@ class Orchestrator:
             repl (bool): Whether to start the interactive REPL interface.
                         Defaults to True.
         """
+
         def shutdown_handler(signum, frame):
             print("\nShutting down Orchestrator...")
             self.stop_filters()

@@ -15,6 +15,7 @@ class Requester(Filter):
     Attributes:
         grin (GrinClient): Client for communicating with the GRIN conversion service
     """
+
     def __init__(self, pipe: Pipe) -> None:
         super().__init__(pipe)
         self.grin: GrinClient = GrinClient()

@@ -31,50 +31,39 @@ class RequestMonitor(Monitor):
         self.client = GrinClient()
         self.pipe = self.pipeline.pipe("requested", "converted")
 
-
     @property
     def converted_barcodes(self) -> list[str] | None:
         converted_barcodes: list[str] | None = []
         grin_converted_books = self.client.converted_books
         if grin_converted_books is not None:
-            converted_barcodes = [
-                rec["barcode"] for rec in grin_converted_books
-            ]
+            converted_barcodes = [rec["barcode"] for rec in grin_converted_books]
         return converted_barcodes
-
 
     @property
     def in_process_barcodes(self) -> list[str] | None:
         in_process_barcodes: list[str] | None = []
         grin_in_process_books = self.client.in_process_books
         if grin_in_process_books is not None:
-                in_process_barcodes = [
-                    rec["barcode"] for rec in grin_in_process_books
-                ]
+            in_process_barcodes = [rec["barcode"] for rec in grin_in_process_books]
         return in_process_barcodes
-
 
     def is_in_process(self, token: Token) -> bool:
         return token.get_prop("barcode") in self.in_process_barcodes
 
-
     def is_converted(self, token: Token) -> bool:
         return token.get_prop("barcode") in self.converted_barcodes
 
-
-
     def report(self) -> dict[str, list[Token]]:
         report = {}
-        report['pending'] = []
-        report['converted'] = []
+        report["pending"] = []
+        report["converted"] = []
         for f in self.pipe.input.glob("*.json"):
             token = load_token(f)
             if self.is_in_process(token):
-                report['pending'].append(token)
+                report["pending"].append(token)
             if self.is_converted(token):
-                report['converted'].append(token)
+                report["converted"].append(token)
         return report
-        
 
     def dry_run(self):
         print("barcode\tin_process\tconverted")
@@ -85,7 +74,6 @@ class RequestMonitor(Monitor):
             converted_p = self.is_converted(tok)
             print(f"{barcode}\t{requested_p}\t{converted_p}")
 
-
     def run(self):
         for f in self.pipe.input.glob("*.json"):
             token = load_token(f)
@@ -94,7 +82,6 @@ class RequestMonitor(Monitor):
                 path = self.pipe.output / Path(token.name).with_suffix(".json")
                 dump_token(token, path)
                 Path(f).unlink()
-
 
 
 if __name__ == "__main__":

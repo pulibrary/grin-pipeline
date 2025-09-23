@@ -17,6 +17,7 @@ class TokenBag:
         tokens (list): List of Token objects currently in the bag
         bag_dir (Path): Directory path where tokens are persisted
     """
+
     def __init__(self, bag_dir: Path | None = None) -> None:
         self.tokens = []
         if bag_dir:

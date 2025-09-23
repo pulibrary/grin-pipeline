@@ -20,6 +20,7 @@ class Book:
         date_completed (str | None): Timestamp when processing was completed
         status (str | None): Current processing status ('chosen', 'completed', etc.)
     """
+
     barcode: str
     date_chosen: str | None
     date_completed: str | None
@@ -54,6 +55,7 @@ class BookLedger:
         _books (dict[str, Book] | None): Cached book records keyed by barcode
         _fieldnames (list): CSV column names from the ledger file
     """
+
     def __init__(self, csv_file):
         self.csv_file = Path(csv_file)
         self._books: dict[str, Book] | None = None

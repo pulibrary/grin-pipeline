@@ -28,15 +28,14 @@ def reset_test_dirs():
     token.put_prop("destination_file", str(destination / test_file))
     token_path = dummy_in / Path(barcode).with_suffix(".json")
     dump_token(token, token_path)
-    with (source / test_file).open('w') as f:
+    with (source / test_file).open("w") as f:
         f.write("This is test data.")
-    
+
 
 @pytest.fixture
 def mover():
     pipe: Pipe = Pipe(dummy_in, dummy_out)
     return Mover(pipe)
-
 
 
 def test_filter(mover):
@@ -48,4 +47,3 @@ def test_filter(mover):
 
     assert (source / test_file).exists() is False
     assert (destination / test_file).exists() is True
-

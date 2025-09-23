@@ -16,6 +16,7 @@ class Stager:
         processing_bucket (Path): Directory where files will be processed
         start_bucket (Path): Pipeline start bucket where tokens begin processing
     """
+
     def __init__(
         self,
         secretary: Secretary,

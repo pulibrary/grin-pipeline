@@ -22,6 +22,7 @@ class Downloader(Filter):
     conversion requests have been processed. It downloads files to the
     processing bucket specified in the token.
     """
+
     def __init__(self, pipe: Pipe):
         super().__init__(pipe)
 

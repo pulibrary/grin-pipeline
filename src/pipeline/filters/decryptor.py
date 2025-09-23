@@ -18,6 +18,7 @@ class Decryptor(Filter):
     Attributes:
         passphrase (str): GPG decryption passphrase from environment
     """
+
     def __init__(self, pipe: Pipe) -> None:
         passphrase = os.environ.get("DECRYPTION_PASSPHRASE")
         if not passphrase:

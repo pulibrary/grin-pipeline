@@ -20,6 +20,7 @@ class Token:
         content (dict): Dictionary containing token metadata including barcode,
                        processing history, and stage-specific data.
     """
+
     def __init__(self, content: dict):
         self.content = content
 
@@ -97,6 +98,7 @@ class Pipe:
         output (Path): Output bucket directory path
         token (Token | None): Currently held token being processed
     """
+
     def __init__(self, in_path: Path, out_path: Path) -> None:
         self.input = in_path
         self.output = out_path
@@ -163,8 +165,6 @@ class Pipe:
         for f in self.input.glob("*.json"):
             all_tokens.append(load_token(f))
         return all_tokens
-            
-    
 
     def take_token(self):
         """Take the next available token from the input bucket.
@@ -250,6 +250,7 @@ class Filter:
         pipe (Pipe): The pipe for token input/output operations
         stage_name (str): Name of the processing stage for logging
     """
+
     def __init__(self, pipe: Pipe):
         self.pipe = pipe
         self.stage_name: str = self.__class__.__name__.lower()
@@ -350,6 +351,7 @@ class Pipeline:
         config (dict): Pipeline configuration dictionary
         buckets (dict): Mapping of bucket names to Path objects
     """
+
     def __init__(self, config: dict):
         self.config = config
         self.buckets = {}
