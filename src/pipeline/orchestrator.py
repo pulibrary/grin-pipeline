@@ -70,14 +70,6 @@ class Orchestrator:
             for k, v in filt.get("args").items():
                 extra_env[k] = v
 
-        # if "decryption_passphrase" in filt:
-        #     extra_env["DECRYPTION_PASSPHRASE"] = filt["decryption_passphrase"]
-
-        # if "object_store" in filt:
-        #     extra_env["OBJECT_STORE"] = filt["object_store"]
-
-        # if "local_dir" in filt:
-        #     extra_env["LOCAL_DIR"] = filt["local_dir"]
         logging.info("Starting filter: %s", " ".join(cmd))
 
         # Start the filter process with combined environment
@@ -85,23 +77,6 @@ class Orchestrator:
         # Track the process for lifecycle management
         self.processes.append((filt["name"], proc))
 
-    def start_filter_old(self, filt):
-        extra_env = {}
-        cmd = [
-            sys.executable,
-            filt["script"],
-            "--input",
-            filt["input_pipe"],
-            "--output",
-            filt["output_pipe"],
-        ]
-
-        if "decryption_passphrase" in filt:
-            extra_env["DECRYPTION_PASSPHRASE"] = filt["decryption_passphrase"]
-
-        logging.info("Starting filter: %s", " ".join(cmd))
-        proc = subprocess.Popen(cmd, env={**os.environ, **extra_env})
-        self.processes.append((filt["name"], proc))
 
     def stop_filters(self):
         """Stop all running filter processes gracefully.
