@@ -195,15 +195,13 @@ class Pipe:
                 return None
         else:
             try:
-                token_path = self.input / Path(barcode).with_suffix('.json')
+                token_path = self.input / Path(barcode).with_suffix(".json")
                 self.token = load_token(token_path)
                 self.mark_token()  # Rename to .bak to prevent concurrent access
                 return self.token
             except FileNotFoundError:
                 logging.error(f"{token_path} does not exist")
                 return None
-                
-            
 
     def mark_token(self):
         """Mark the current token as being processed by renaming its file."""
@@ -263,7 +261,7 @@ class Filter:
         stage_name (str): Name of the processing stage for logging
     """
 
-    def __init__(self, pipe: Pipe, poll_interval:int = 5):
+    def __init__(self, pipe: Pipe, poll_interval: int = 5):
         self.pipe = pipe
         self.stage_name: str = self.__class__.__name__.lower()
         self.poll_interval = poll_interval

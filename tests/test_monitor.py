@@ -3,7 +3,7 @@ import tempfile
 from unittest.mock import patch
 from clients import GrinClient
 from pipeline.filters.monitors import RequestMonitor
-from pipeline.plumbing import Pipeline, Pipe, Token, dump_token, load_token
+from pipeline.plumbing import Pipeline, Token, dump_token, load_token
 
 converted_barcode = "1"
 in_process_barcode = "2"
@@ -35,7 +35,7 @@ def test_converted_barcodes():
         pipeline = Pipeline({})
         pipeline.add_bucket("requested", requested_bucket)
         pipeline.add_bucket("converted", converted_bucket)
-        pipe = pipeline.pipe('requested', 'converted')
+        pipe = pipeline.pipe("requested", "converted")
 
         monitor = RequestMonitor(pipe, poll_interval=5)
         barcode = converted_token.get_prop("barcode")
