@@ -9,7 +9,6 @@ from pipeline.book_ledger import BookLedger
 from pipeline.stager import Stager
 from pipeline.secretary import Secretary
 from pipeline.config_loader import load_config
-from pipeline.filters.monitors import RequestMonitor
 from pipeline.synchronizer import Synchronizer
 
 
@@ -28,7 +27,6 @@ class Manager:
         secretary (Secretary): Manages book selection from ledger into token bag
         stager (Stager): Moves tokens from bag to pipeline start
         pipeline (Pipeline): Manages bucket directories and token flow
-        request_monitor (RequestMonitor): Monitors conversion request status
         synchronizer (Synchronizer): Syncs GRIN converted files with pipeline
         processes (list): List of running subprocess references
         commands (dict): Available REPL commands and their handlers
@@ -50,7 +48,6 @@ class Manager:
         )
         self.stager = Stager(self.secretary, processing_bucket, start_bucket)
         self.pipeline = Pipeline(config)
-        self.request_monitor = RequestMonitor(self.pipeline)
         self.synchronizer = Synchronizer(config)
         self.processes = []
         self.commands = {
@@ -74,14 +71,6 @@ class Manager:
             "synchronize": {
                 "help": "sync GRIN converted with pipeline",
                 "fn": self._synchronize_command,
-            },
-            "dry request monitor": {
-                "help": "request monitor dry run",
-                "fn": lambda: self.request_monitor.dry_run(),
-            },
-            "request monitor": {
-                "help": "request monitor run",
-                "fn": lambda: self.request_monitor.run(),
             },
             "stage": {
                 "help": "put the tokens into the pipeline",
