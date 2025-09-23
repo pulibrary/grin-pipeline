@@ -6,7 +6,6 @@ from pipeline.token_bag import TokenBag
 from pipeline.book_ledger import BookLedger, Book
 from pipeline.stager import Stager
 from pipeline.secretary import Secretary
-from pipeline.filters.monitors import RequestMonitor
 
 
 class Synchronizer:
@@ -35,7 +34,6 @@ class Synchronizer:
         )
         self.stager = Stager(self.secretary, processing_bucket, pipeline_bucket)
         self.pipeline = Pipeline(config)
-        self.request_monitor = RequestMonitor(self.pipeline)
         self.client = GrinClient()
 
     @property
