@@ -155,6 +155,6 @@ if __name__ == "__main__":
 
     pipe: Pipe = Pipe(Path(args.input), Path(args.output))
 
-    monitor = RequestMonitor(pipe, os.environ.get("POLL_INTERVAL"))
+    monitor = RequestMonitor(pipe, int(os.environ.get("POLL_INTERVAL")))
     logger.info("starting request monitor")
     monitor.run_forever()
