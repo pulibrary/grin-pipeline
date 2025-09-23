@@ -1,91 +1,172 @@
 from pathlib import Path
 import os
+import sys
 import logging
-from pipeline.config_loader import load_config
-from pipeline.plumbing import Pipeline, Token, load_token, dump_token
+from pipeline.plumbing import Pipe, Filter, Token, load_token, dump_token
 from clients import GrinClient
 
 
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-class Monitor:
-    def __init__(self, pipeline: Pipeline) -> None:
-        self.pipeline = pipeline
+class Monitor(Filter):
+    """
+    A subclass of Filter that processes all the tokens in
+    the input bucket at once and then waits. A standard Filter
+    keeps taking tokens from the input bucket until that
+    bucket is empty; Monitors check for some condition, and if
+    the condition is not met, they put the token back, so the
+    wait interval has to occur after a run through all the tokens.
+    """
+    def __init__(self, pipe: Pipe, poll_interval:int=60) -> None:
+        super().__init__(pipe, poll_interval)
+        
 
-    def run(self):
-        pass
-
-    def dry_run(self):
-        pass
+    def set_up_run(self):
+        pass                    # implemented by subclasses
 
 
+
+    def run_once(self) -> bool:
+        """
+        Process all the tokens in the input pipe.
+        """
+        return_val = True       # always return True
+
+        # First set up the run: class-specific actions
+        self.set_up_run()
+
+        # Then, get a list of all the tokens in the input pipe.
+
+        barcodes = [tok.name for tok in self.pipe.list_input_tokens()]
+        for barcode in barcodes:
+            token: Token | None = self.pipe.take_token(barcode)
+            if token and self.validate_token(token):
+                try:
+                    processed: bool = self.process_token(token)
+                    if processed:
+                        self.log_to_token(token, "INFO",
+                                          f"{self.stage_name} ran successfully")
+                        self.pipe.put_token()
+                    else:
+                        logging.error(f"{self.stage_name} did not process {token.name}")
+                        self.log_to_token(token, "WARNING",
+                                          f"{self.stage_name} did not run successfully")
+                        self.pipe.put_token(errorFlg=True)
+
+                except Exception as e:
+                    self.log_to_token(token, "ERROR", f"in {self.stage_name}: {str(e)}")
+                    logging.error(f"Error processing {token.name}: {str(e)}")
+                    self.pipe.put_token(errorFlg=True)
+        return return_val
+
+
+    def validate_token(self, token: Token) -> bool:
+        """Validate that the token has required fields for downloading.
+
+        Args:
+            token (Token): Token to validate
+
+        Returns:
+            bool: Always returns True as all tokens are valid for monitoring
+        """
+        return True
+
+                    
+
+            
+                
 class RequestMonitor(Monitor):
     """Monitors the Requested bucket, examining
     each token to see if its book has been converted
     by GRIN yet.  If so, it moves the token to the
     Converted bucket."""
 
-    def __init__(self, pipeline: Pipeline) -> None:
-        super().__init__(pipeline)
-        self.client = GrinClient()
-        self.pipe = self.pipeline.pipe("requested", "converted")
+    def __init__(self, pipe, poll_interval) -> None:
+        super().__init__(pipe, poll_interval)
+        self.client:GrinClient = GrinClient()
+        self._converted_barcodes = None
+        self._in_process_barcodes = None
+
+
+
+    def set_up_run(self):
+        self._converted_barcodes = None
+        self._in_process_barcodes = None
+
+
 
     @property
-    def converted_barcodes(self) -> list[str] | None:
-        converted_barcodes: list[str] | None = []
-        grin_converted_books = self.client.converted_books
-        if grin_converted_books is not None:
-            converted_barcodes = [rec["barcode"] for rec in grin_converted_books]
-        return converted_barcodes
+    def converted_barcodes(self):
+        if self._converted_barcodes is None:
+            self._converted_barcodes = [rec['barcode'] for rec in self.client.converted_books]
+        return self._converted_barcodes
+
+
 
     @property
-    def in_process_barcodes(self) -> list[str] | None:
-        in_process_barcodes: list[str] | None = []
-        grin_in_process_books = self.client.in_process_books
-        if grin_in_process_books is not None:
-            in_process_barcodes = [rec["barcode"] for rec in grin_in_process_books]
-        return in_process_barcodes
+    def in_process_barcodes(self):
+        if self._in_process_barcodes is None:
+            self._in_process_barcodes = [rec['barcode'] for rec in self.client.in_process_books]
+        return self._in_process_barcodes
+
+
 
     def is_in_process(self, token: Token) -> bool:
         return token.get_prop("barcode") in self.in_process_barcodes
 
+
+
     def is_converted(self, token: Token) -> bool:
         return token.get_prop("barcode") in self.converted_barcodes
 
-    def report(self) -> dict[str, list[Token]]:
-        report = {}
-        report["pending"] = []
-        report["converted"] = []
-        for f in self.pipe.input.glob("*.json"):
-            token = load_token(f)
+
+
+    def run_once(self) -> bool:
+        # First, set up the run
+        self.set_up_run()
+
+        
+        # Then, get a list of all the tokens in the input pipe.
+        barcodes = [tok.name for tok in self.pipe.list_input_tokens()]
+
+        # Iterate over the list of barcodes. If the barcode is in the
+        # in_process list from GRIN, leave it where it is.  If it is
+        # in the converted list from GRIN, move it to the converted_bucket.
+        # If it is in neither, raise an error.
+
+
+        for barcode in barcodes:
+            token: Token | None = self.pipe.take_token(barcode)
             if self.is_in_process(token):
-                report["pending"].append(token)
-            if self.is_converted(token):
-                report["converted"].append(token)
-        return report
+                self.log_to_token(token, "INFO",
+                                  "Book is still in process")
+                self.pipe.put_token_back()
 
-    def dry_run(self):
-        print("barcode\tin_process\tconverted")
-        for f in self.pipe.input.glob("*.json"):
-            tok = load_token(f)
-            barcode = tok.get_prop("barcode")
-            requested_p = self.is_in_process(tok)
-            converted_p = self.is_converted(tok)
-            print(f"{barcode}\t{requested_p}\t{converted_p}")
+            elif self.is_converted(token):
+                self.log_to_token(token, "INFO",
+                                  "Book has been converted")
+                self.pipe.put_token()
 
-    def run(self):
-        for f in self.pipe.input.glob("*.json"):
-            token = load_token(f)
-            if self.is_converted(token):
-                token.write_log("conversion complete", "INFO", "Monitor")
-                path = self.pipe.output / Path(token.name).with_suffix(".json")
-                dump_token(token, path)
-                Path(f).unlink()
+            else:
+                raise(FileNotFoundError, f"{barcode} is in neither the in_process or converted GRIN queues")
+    
 
 
 if __name__ == "__main__":
-    config_path: str = os.environ.get("PIPELINE_CONFIG", "config.yml")
-    config: dict = load_config(config_path)
+    if "POLL_INTERVAL" not in os.environ:
+        print("Please set the POLL_INTERVAL environment variable.")
+        sys.exit(1)
 
-    monitor = RequestMonitor(Pipeline(config))
+
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input", required=True)
+    parser.add_argument("--output", required=True)
+    args = parser.parse_args()
+
+    pipe: Pipe = Pipe(Path(args.input), Path(args.output))
+
+    monitor = RequestMonitor(pipe, os.environ.get("POLL_INTERVAL"))
+    logger.info("starting request monitor")
+    monitor.run_forever()

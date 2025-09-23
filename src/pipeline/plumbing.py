@@ -263,9 +263,10 @@ class Filter:
         stage_name (str): Name of the processing stage for logging
     """
 
-    def __init__(self, pipe: Pipe):
+    def __init__(self, pipe: Pipe, poll_interval:int = 5):
         self.pipe = pipe
         self.stage_name: str = self.__class__.__name__.lower()
+        self.poll_interval = poll_interval
 
     def log_to_token(self, token, level, message):
         token.write_log(message, level, self.stage_name)
@@ -311,7 +312,7 @@ class Filter:
             self.pipe.put_token(errorFlg=True)
             return False
 
-    def run_forever(self, poll_interval=5):
+    def run_forever(self):
         """Continuously process tokens with polling.
 
         Args:
@@ -320,7 +321,7 @@ class Filter:
         """
         while True:
             if not self.run_once():
-                sleep(poll_interval)
+                sleep(self.poll_interval)
 
     def process_token(self, token: Token):
         """Process a token - must be implemented by subclasses.
