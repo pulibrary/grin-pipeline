@@ -166,7 +166,7 @@ class Pipe:
             all_tokens.append(load_token(f))
         return all_tokens
 
-    def take_token(self):
+    def take_token(self, barcode: str | None = None):
         """Take the next available token from the input bucket.
 
         Finds the first available JSON token file, loads it, and marks it
@@ -181,17 +181,29 @@ class Pipe:
             logging.error("there's already a current token")
             return None
 
-        try:
-            # Find the first available token file in the input bucket
-            token_path = next(self.input.glob("*.json"))
-            # Load the token and mark it as being processed
-            self.token = load_token(token_path)
-            self.mark_token()  # Rename to .bak to prevent concurrent access
-            return self.token
+        if barcode is None:
+            try:
+                # Find the first available token file in the input bucket
+                token_path = next(self.input.glob("*.json"))
+                # Load the token and mark it as being processed
+                self.token = load_token(token_path)
+                self.mark_token()  # Rename to .bak to prevent concurrent access
+                return self.token
 
-        except StopIteration:
-            # No tokens available for processing
-            return None
+            except StopIteration:
+                # No tokens available for processing
+                return None
+        else:
+            try:
+                token_path = self.input / Path(barcode).with_suffix('.json')
+                self.token = load_token(token_path)
+                self.mark_token()  # Rename to .bak to prevent concurrent access
+                return self.token
+            except FileNotFoundError:
+                logging.error(f"{token_path} does not exist")
+                return None
+                
+            
 
     def mark_token(self):
         """Mark the current token as being processed by renaming its file."""

@@ -55,6 +55,36 @@ def test_take_token(test_pipe):
     assert backup_name in list(dummy_in.glob("*.*"))
 
 
+def test_take_token_with_arg(test_pipe):
+    reset_test_dirs()
+    filename = Path(f"{dummy_in}/{barcode}.json")
+    backup_name = Path(f"{dummy_in}/{barcode}.bak")
+    assert test_pipe.token is None
+    assert filename in list(dummy_in.glob("*.*"))
+    assert backup_name not in list(dummy_in.glob("*.*"))
+
+    test_pipe.take_token(barcode)
+    assert test_pipe.token is not None
+    assert filename not in list(dummy_in.glob("*.*"))
+    assert backup_name in list(dummy_in.glob("*.*"))
+
+
+
+def test_take_token_with_arg_fail(test_pipe):
+    reset_test_dirs()
+    wrong_barcode="notarealbarcode"
+    filename = Path(f"{dummy_in}/{wrong_barcode}.json")
+    backup_name = Path(f"{dummy_in}/{wrong_barcode}.bak")
+    assert test_pipe.token is None
+
+    test_pipe.take_token(wrong_barcode)
+    assert test_pipe.token is None
+    assert filename not in list(dummy_in.glob("*.*"))
+    assert backup_name not in list(dummy_in.glob("*.*"))
+
+    
+
+
 def test_put_token(test_pipe):
     reset_test_dirs()
     test_pipe.take_token()
