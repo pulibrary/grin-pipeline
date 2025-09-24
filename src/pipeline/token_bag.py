@@ -2,7 +2,8 @@
 
 
 from pathlib import Path
-from pipeline.plumbing import Token, load_token, dump_token
+
+from pipeline.plumbing import Token, dump_token, load_token
 
 
 class TokenBag:
@@ -53,7 +54,7 @@ class TokenBag:
             for token in self.tokens:
                 dump_token(token, self.bag_dir / Path(token.name).with_suffix(".json"))
 
-    def find(self, barcode):
+    def find_token(self, barcode):
         """Find a token by its barcode.
 
         Args:
@@ -78,7 +79,7 @@ class TokenBag:
         Raises:
             ValueError: If the token is not found
         """
-        token = self.find(barcode)
+        token = self.find_token(barcode)
         if token is not None:
             self.tokens.remove(token)
             return token

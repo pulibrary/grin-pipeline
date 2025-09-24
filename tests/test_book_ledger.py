@@ -1,4 +1,4 @@
-from pipeline.book_ledger import BookLedger, Book
+from pipeline.book_ledger import Book, BookLedger, BookStatus
 
 
 def test_book_ledger_read(shared_datadir):
@@ -27,3 +27,36 @@ def test_book_ledger_choose_book(shared_datadir):
     book: Book | None = ledger.entry(barcode)
     assert book is not None
     assert book.status is None
+    assert book in ledger.all_unprocessed_books
+    assert book not in ledger.all_chosen_books
+    assert book not in ledger.all_completed_books
+
+    ledger.choose_book(barcode)
+
+    assert book.status == BookStatus.CHOSEN
+    assert book not in ledger.all_unprocessed_books
+    assert book in ledger.all_chosen_books
+    assert book not in ledger.all_completed_books
+
+
+def test_book_ledger_mark_book_complete(shared_datadir):
+    test_csv_file = shared_datadir / "test_ledger.csv"
+    ledger = BookLedger(test_csv_file)
+
+    barcode = "32101078166681"
+
+    book: Book | None = ledger.entry(barcode)
+    assert book is not None
+    assert book.status is None
+
+    assert book in ledger.all_unprocessed_books
+    assert book not in ledger.all_chosen_books
+    assert book not in ledger.all_completed_books
+
+    ledger.mark_book_completed(barcode)
+
+    assert book.status == BookStatus.COMPLETED
+    assert book.status == BookStatus.COMPLETED
+    assert book not in ledger.all_unprocessed_books
+    assert book not in ledger.all_chosen_books
+    assert book in ledger.all_completed_books

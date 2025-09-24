@@ -1,9 +1,15 @@
 # book_ledger.py
-from datetime import datetime
 import csv
-from dataclasses import dataclass, asdict
-from pathlib import Path
 import shutil
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from enum import StrEnum
+from pathlib import Path
+
+
+class BookStatus(StrEnum):
+    CHOSEN = "chosen"
+    COMPLETED = "completed"
 
 
 @dataclass
@@ -111,13 +117,6 @@ class BookLedger:
             self._books = self.read_ledger()
         return self._books
 
-    # def book(self, barcode) -> Book | None:
-    #     book = self.books.get(barcode)
-    #     if book is not None:
-    #         return book
-    #     else:
-    #         return None
-
     def set_book(self, barcode, book: Book):
         self.books[barcode] = book
 
@@ -125,22 +124,25 @@ class BookLedger:
         """Mark a book as chosen for processing.
 
         Updates the book's status to 'chosen' and sets the chosen timestamp.
-
-        Args:
-            barcode (str): Barcode of the book to choose
-
-        Returns:
-            Book: The updated book record
-
-        Raises:
-            ValueError: If the book is not found in the ledger
+        Args: barcode (str): Barcode of the book to choose
+        Returns: Book: The updated book record
+        Raises:  ValueError: If the book is not found in the ledger
         """
+
         entry: Book | None = self.entry(barcode)
         if entry:
             entry.status = "chosen"
             entry.date_chosen = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             return entry
+        else:
+            raise ValueError(f"book {barcode} not in ledger")
 
+    def mark_book_completed(self, barcode):
+        entry: Book | None = self.entry(barcode)
+        if entry:
+            entry.status = BookStatus.COMPLETED
+            entry.date_completed = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            return entry
         else:
             raise ValueError(f"book {barcode} not in ledger")
 

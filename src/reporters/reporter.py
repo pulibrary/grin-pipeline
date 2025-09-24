@@ -35,6 +35,19 @@ class Reporter:
     what barcodes are in process, converted, available; what barcodes
     are available but have not yet been processed; etc."""
 
+    def __init__(self) -> None:
+        pass
+
+    def report(self, **kwargs) -> dict:
+        pass
+
+
+class ReporterOld:
+    """Family of classes that gather information about aspects of GRIN
+    and the GRIN pipeline: what barcodes have already been processed;
+    what barcodes are in process, converted, available; what barcodes
+    are available but have not yet been processed; etc."""
+
     def __init__(self, grin_client: GrinClient):
         self.grin_client = grin_client
 
@@ -44,8 +57,9 @@ class Reporter:
 
 class ObjectStoreReporter(Reporter):
     def __init__(self, grin_client: GrinClient, s3_client: S3Client):
-        super().__init__(grin_client)
-        self.s3_client = s3_client
+        super().__init__()
+        self.s3_client = S3Client("/tmp")
+        self.grin_client = GrinClient()
 
     def objects_in_store(self):
         paginator = self.s3_client.client.get_paginator("list_objects_v2")

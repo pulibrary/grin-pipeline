@@ -1,6 +1,7 @@
-import tempfile
 import shutil
+import tempfile
 from pathlib import Path
+
 from pipeline.token_bag import TokenBag
 
 
@@ -17,11 +18,11 @@ def test_find_token(shared_datadir):
     bag = TokenBag(bag_dir)
     bag.load()
 
-    tok = bag.find("345")
+    tok = bag.find_token("345")
     assert tok is not None
     assert tok.name == "345"
 
-    tok = bag.find("foobarbaz")
+    tok = bag.find_token("foobarbaz")
     assert tok is None
 
 
@@ -37,7 +38,7 @@ def test_put_token(shared_datadir):
     bag.put_token(tok)
     assert len(bag.tokens) == 2
 
-    assert bag.find("345") == tok
+    assert bag.find_token("345") == tok
 
 
 def test_add_books(shared_datadir):
@@ -49,11 +50,11 @@ def test_add_books(shared_datadir):
 
     bag.add_books(barcodes)
 
-    new_tok = bag.find(barcodes[0])
+    new_tok = bag.find_token(barcodes[0])
     assert new_tok is not None
     assert new_tok.name == barcodes[0]
 
-    new_tok = bag.find(barcodes[1])
+    new_tok = bag.find_token(barcodes[1])
     assert new_tok is not None
     assert new_tok.name == barcodes[1]
 
@@ -85,13 +86,13 @@ def test_take_token(shared_datadir):
         bag = TokenBag(test_bag_dir)
         bag.load()
         assert len(bag.tokens) == 2
-        # tok = bag.find(barcode)
+        # tok = bag.find_token(barcode)
         tok = bag.take_token(barcode)
         assert tok is not None and tok.get_prop("barcode") == barcode
 
         assert len(bag.tokens) == 1
 
-        tok = bag.find(barcode)
+        tok = bag.find_token(barcode)
         assert tok is None
 
         bag.dump()
@@ -102,7 +103,7 @@ def test_take_token(shared_datadir):
         bag = TokenBag(test_bag_dir)
         bag.load()
         assert len(bag.tokens) == 1
-        tok = bag.find(barcode)
+        tok = bag.find_token(barcode)
         assert tok is None
 
 
@@ -114,12 +115,12 @@ def test_assign_processing_bucket(shared_datadir):
     barcodes = ["5678", "91234"]
 
     bag.add_books(barcodes)
-    tok = bag.find("5678")
+    tok = bag.find_token("5678")
     assert tok is not None
     assert tok.get_prop("processing_bucket") is None
     fake_processing_bucket = "/tmp"
     bag.set_processing_directory(fake_processing_bucket)
-    tok = bag.find("5678")
+    tok = bag.find_token("5678")
     assert tok is not None
     assert tok.get_prop("processing_bucket") == fake_processing_bucket
 

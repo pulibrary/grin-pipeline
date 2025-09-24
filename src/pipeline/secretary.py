@@ -1,7 +1,8 @@
 from pathlib import Path
-from pipeline.token_bag import TokenBag
-from pipeline.book_ledger import BookLedger, Book
+
+from pipeline.book_ledger import Book, BookLedger
 from pipeline.plumbing import Token
+from pipeline.token_bag import TokenBag
 
 
 class Secretary:
@@ -29,7 +30,7 @@ class Secretary:
         return self.bag.size
 
     def find_in_bag(self, barcode) -> Token | None:
-        return self.bag.find(barcode)
+        return self.bag.find_token(barcode)
 
     def find_in_ledger(self, barcode) -> Book | None:
         return self.ledger.entry(barcode)
@@ -52,9 +53,7 @@ class Secretary:
 
     def status(self):
         stats = {}
-
         stats["bag_current_size"] = len(self.bag.tokens)
-
         return stats
 
     def choose_book(self, barcode: str) -> Book:
@@ -82,6 +81,14 @@ class Secretary:
             # Convert each selected book into a token in the bag
             for book in books_to_choose:
                 self.choose_book(book.barcode)
+
+    def mark_book_completed(self, barcode: str):
+        entry = self.ledger.entry(barcode)
+        if entry:
+            self.ledger.mark_book_completed(barcode)
+        else:
+            error_msg = f"{barcode} is not in ledger"
+            raise KeyError(error_msg)
 
     def pour_bag(self, bucket: Path):
         self.bag.pour_into(bucket)
