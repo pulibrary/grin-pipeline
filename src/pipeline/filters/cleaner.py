@@ -1,9 +1,9 @@
+import logging
 import os
 import sys
-import logging
 from pathlib import Path
-from pipeline.plumbing import Pipe, Filter, Token
 
+from pipeline.plumbing import Filter, Pipe, Token
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
@@ -180,20 +180,11 @@ if __name__ == "__main__":
     pipe: Pipe = Pipe(Path(args.input), Path(args.output))
 
     finished_bucket = os.environ.get("FINISHED_BUCKET")
-    token_bag = os.environ.get("TOKEN_BAG")
-    converted_bucket = os.environ.get("CONVERTED_BUCKET")
 
     if finished_bucket is None:
         print("FINISHED_BUCKET environment variable is not set.")
         sys.exit(1)
-    if token_bag is None:
-        print("TOKEN_BAG environment variable is not set.")
-        sys.exit(1)
-    if converted_bucket is None:
-        print("CONVERTED_BUCKET environment variable is not set.")
-        sys.exit(1)
-    cleaner: Cleaner = SeedingCleaner(
-        pipe, finished_bucket, token_bag, converted_bucket
-    )
+
+    cleaner: Cleaner = Cleaner(pipe, finished_bucket)
     logger.info("starting cleaner")
     cleaner.run_forever()
