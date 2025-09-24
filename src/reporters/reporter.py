@@ -1,11 +1,11 @@
-import os
-from io import StringIO
 import logging
-from pipeline.config_loader import load_config
-from clients import GrinClient
-from clients import S3Client
+import os
 from collections import namedtuple
 from csv import DictWriter
+from io import StringIO
+
+from clients import GrinClient, S3Client
+from pipeline.config_loader import load_config
 
 config_path: str = os.environ.get("PIPELINE_CONFIG", "config.yml")
 config: dict = load_config(config_path)
@@ -68,13 +68,12 @@ class ObjectStoreReporter(Reporter):
             csv_string = out_buf.getvalue()
         return csv_string
 
-    def report(self, **kwargs):
+    def report(self, **kwargs) -> str:
         format: str = kwargs.get("format")
         match format:
             case "table":
-                print(self.format_as_table(self.objects_in_store()))
+                return self.format_as_table_to_print(self.objects_in_store())
             case "barcodes":
-                for ob in self.objects_in_store():
-                    print(ob.Key)
+                return [ob.key for ob in self.objects_in_store()]
             case _:
-                print("no format")
+                return ""
