@@ -1,10 +1,10 @@
-from pathlib import Path
+import logging
 import os
 import sys
-import logging
-from pipeline.plumbing import Pipe, Filter, Token
-from clients import GrinClient
+from pathlib import Path
 
+from clients import GrinClient
+from pipeline.plumbing import Filter, Pipe, Token
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -135,9 +135,8 @@ class RequestMonitor(Monitor):
                 self.pipe.put_token()
 
             else:
-                raise (
-                    FileNotFoundError,
-                    f"{barcode} is in neither the in_process or converted GRIN queues",
+                logger.warning(
+                    f"{barcode} is in neither the in_process or converted GRIN queues. Maybe in start?"
                 )
 
 
