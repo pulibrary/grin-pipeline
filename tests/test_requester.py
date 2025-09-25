@@ -46,7 +46,6 @@ def test_request_failure():
 
         requester = Requester(pipe)
         requester.run_once()
-        breakpoint()
         assert len(list(pipe.input.glob("*.json"))) == 0
         assert len(list(pipe.input.glob("*.err"))) == 1
         assert len(list(pipe.output.glob("*.*"))) == 0
