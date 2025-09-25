@@ -6,9 +6,6 @@
 #+creator: Emacs 30.2 (Org mode 9.7.11)
 
 
-
-* GRIN Siphon
-
 GRIN Siphon is a robust, highly configurable tool for academic
 libraries that have partnered with Google Books and wish to work with
 their contributions to Google's digital archive via Google's GRIN
