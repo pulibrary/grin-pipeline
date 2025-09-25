@@ -139,6 +139,7 @@ class RequestMonitor(Monitor):
                     logger.warning(
                         f"{barcode} is in neither the in_process or converted GRIN queues. Maybe in start?"
                     )
+                    self.pipe.put_token_back()
 
 
 if __name__ == "__main__":
