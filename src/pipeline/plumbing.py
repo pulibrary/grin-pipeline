@@ -1,8 +1,8 @@
 import json
-from pathlib import Path
-from datetime import datetime, timezone
-from time import sleep
 import logging
+from datetime import datetime, timezone
+from pathlib import Path
+from time import sleep
 from typing import Optional
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -299,7 +299,7 @@ class Filter:
                 self.pipe.put_token()
             else:
                 logging.error(f"Did not proces token: {token.name}")
-                self.log_to_token(token, "WARNING", "Stage did not run successfully")
+                self.log_to_token(token, "ERROR", "Stage did not run successfully")
                 self.pipe.put_token(errorFlg=True)
 
             return True

@@ -1,7 +1,9 @@
 import logging
+from enum import StrEnum
 from pathlib import Path
+
 from clients import GrinClient
-from pipeline.plumbing import Pipe, Filter, Token
+from pipeline.plumbing import Filter, Pipe, Token
 
 
 class Requester(Filter):
@@ -15,6 +17,10 @@ class Requester(Filter):
     Attributes:
         grin (GrinClient): Client for communicating with the GRIN conversion service
     """
+
+    class ERRORS(StrEnum):
+        NOTALLOWED = "Not allowed to be downloaded"
+        OTHERERROR = "Other error"
 
     def __init__(self, pipe: Pipe) -> None:
         super().__init__(pipe)
@@ -48,8 +54,13 @@ class Requester(Filter):
         response = self.grin.convert_book(barcode)
         if response is not None:
             status = response[barcode]
-            self.log_to_token(token, "INFO", status)
-            successflg = True
+            if status in self.ERRORS:
+                logging.error(f"request error for {barcode}: {status}")
+                self.log_to_token(token, "ERROR", status)
+                successflg = False
+            else:
+                self.log_to_token(token, "INFO", status)
+                successflg = True
         else:
             logging.error(f"submission of barcode for conversion failed: {barcode}")
             successflg = False
