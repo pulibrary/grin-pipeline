@@ -128,7 +128,6 @@ class RequestMonitor(Monitor):
             token: Token | None = self.pipe.take_token(barcode)
             if token:
                 if self.is_in_process(token):
-                    self.log_to_token(token, "INFO", "Book is still in process")
                     self.pipe.put_token_back()
 
                 elif self.is_converted(token):
@@ -136,10 +135,12 @@ class RequestMonitor(Monitor):
                     self.pipe.put_token()
 
                 else:
-                    logger.warning(
-                        f"{barcode} is in neither the in_process or converted GRIN queues. Maybe in start?"
+                    self.log_to_token(
+                        token,
+                        "ERROR",
+                        "Book is in neither in_proces or converted queues",
                     )
-                    self.pipe.put_token_back()
+                    self.pipe.put_token(errorFlg=True)
 
 
 if __name__ == "__main__":
