@@ -56,7 +56,7 @@ class ReporterOld:
 
 
 class ObjectStoreReporter(Reporter):
-    def __init__(self, grin_client: GrinClient, s3_client: S3Client):
+    def __init__(self):
         super().__init__()
         self.s3_client = S3Client("/tmp")
         self.grin_client = GrinClient()
