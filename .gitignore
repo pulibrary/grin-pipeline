@@ -10,7 +10,7 @@ venv/
 # PDM artifacts
 __pypackages__/
 pdm.lock
-
+.pdm-python
 # Config and temp files
 .env
 config.yml
