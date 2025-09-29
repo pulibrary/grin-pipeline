@@ -14,74 +14,11 @@ import functools
 import time
 import threading
 from dotenv import load_dotenv
+from clients.auth_util import load_creds_or_die, build_auth_header
 
-from oauth2client.client import flow_from_clientsecrets
-from oauth2client.file import Storage
-from oauth2client.tools import run_flow
 
 load_dotenv()
 
-
-# These are the authentication scopes you are requesting. These are the limited
-# powers granted to the thing you give the token to. In this case, you're asking
-# for a token that will give GRIN the permission to see your email address and
-# profile information.
-SCOPES = [
-    "https://www.googleapis.com/auth/userinfo.email",
-    "https://www.googleapis.com/auth/userinfo.profile",
-]
-
-# This is the file you downloaded from console.developers.google.com when you
-# created your 'project'. You need this to generate credentials. Once you've
-# generated the credentials, you could delete this file.
-sfile = os.getenv("GOOGLE_SECRETS_FILE")
-
-# This file contains the authorization token ('access_token') shared with GRIN,
-# and the refresh token ('refresh_token') used to issue access tokens when your
-# current token has expired.
-cfile = os.getenv("GOOGLE_TOKEN_FILE")
-
-
-# How much we read/write when streaming response data.
-OUTPUT_BLOCKSIZE = 1024 * 1024
-
-
-class CredsMissingError(IOError):
-    """Raised by CredentialsFactory() when credentials are missing."""
-
-
-class GRINPermissionDeniedError(IOError):
-    """GRIN says you're not allowed."""
-
-
-class GoogleLoginError(IOError):
-    """Something failed logging in to Google."""
-
-
-def credentials_factory(credentials_file):
-    """Use the oauth2 libraries to load our credentials."""
-    storage = Storage(credentials_file)
-    creds = storage.get()
-    if creds is None:
-        raise CredsMissingError()
-    # If the credentials are expired, use the 'refresh_token' to generate a new one.
-    if creds.access_token_expired:
-        creds.refresh(httplib2.Http())
-    return creds
-
-
-def get_creds(credentials_file, secrets_file):
-    # Get proper oauth2 credentials.
-    try:
-        creds = credentials_factory(credentials_file)
-    except CredsMissingError:
-        storage = Storage(credentials_file)
-        creds = run_flow(flow_from_clientsecrets(secrets_file, scope=SCOPES), storage)
-    return creds
-
-
-# This is a wrapper/decorator to limit the rate of calls made to the
-# GRIN API.  Can be used more generally.
 
 
 def rate_limiter(max_calls, period):
@@ -128,18 +65,26 @@ def table_to_dictlist(table, fields) -> list:
 
 class GrinClient:
     def __init__(self, directory: str = "PRNC") -> None:
+        load_dotenv()  # ensure .env is read
+        secrets = os.environ["GOOGLE_SECRETS_FILE"]
+        token   = os.environ["GOOGLE_TOKEN_FILE"]
+
+        creds = load_creds_or_die(secrets, token)
+        self.auth_header = build_auth_header(creds)
+        # self.base_url = base_url.rstrip("/")
+
         self.base_url = "https://books.google.com/libraries"
         self.directory = directory
-        self.creds = get_creds(cfile, sfile)
+
         self._converted = None
         self._all_books = None
         self._available = None
         self._in_process = None
         self._failed = None
 
-    @property
-    def auth_header(self):
-        return {"Authorization": f"Bearer {self.creds.access_token}"}
+    # @property
+    # def auth_header(self):
+    #     return {"Authorization": f"Bearer {self.creds.access_token}"}
 
     @rate_limiter(max_calls=30, period=60)
     def make_grin_request(self, url, method="GET", data=None):
@@ -157,9 +102,25 @@ class GrinClient:
     def resource_url(self, resource_str):
         return f"{self.base_url}/{self.directory}/{resource_str}"
 
+
+    def _request(self, url: str, method: str="GET", **kwargs):
+        # Always include auth header, and surface *useful* errors
+        headers = kwargs.pop("headers", {})
+        headers = {**self.auth_header, **headers}
+        try:
+            r = httpx.request(method, url, headers=headers, follow_redirects=True, **kwargs)
+            r.raise_for_status()
+            return r
+        except httpx.HTTPStatusError as e:
+            # Show server payload to understand the failure
+            text = getattr(e.response, "text", "")
+            raise RuntimeError(f"{e.request.method} {e.request.url} -> {e.response.status_code}\n{text}") from e
+
+
     def grin_data(self, book_type) -> list:
         url = self.resource_url(f"_{book_type}?format=text&mode=all")
-        response = self.make_grin_request(url)
+        # response = self.make_grin_request(url)
+        response = self._request(url)
         tsv_data = io.StringIO(response.text)
         reader = csv.reader(tsv_data, delimiter="\t")
         table = []
