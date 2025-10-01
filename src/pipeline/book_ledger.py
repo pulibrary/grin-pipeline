@@ -131,7 +131,7 @@ class BookLedger:
 
         entry: Book | None = self.entry(barcode)
         if entry:
-            entry.status = "chosen"
+            entry.status = BookStatus.CHOSEN
             entry.date_chosen = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             return entry
         else:
@@ -148,11 +148,11 @@ class BookLedger:
 
     @property
     def all_chosen_books(self) -> list[Book]:
-        return [book for _, book in self.books.items() if book.status == "chosen"]
+        return [book for _, book in self.books.items() if book.status == BookStatus.CHOSEN]
 
     @property
     def all_completed_books(self) -> list[Book]:
-        return [book for _, book in self.books.items() if book.status == "completed"]
+        return [book for _, book in self.books.items() if book.status == BookStatus.COMPLETED]
 
     @property
     def all_unprocessed_books(self) -> list[Book]:
