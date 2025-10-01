@@ -9,9 +9,7 @@ from pathlib import Path
 
 from pipeline.plumbing import Pipe, Filter
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -33,9 +31,7 @@ class Mover(Filter):
             status = False
 
         if Path(token.content["destination_file"]).exists() is True:
-            logging.error(
-                f"destination file already exists: {token.content['destination_file']}"
-            )
+            logging.error(f"destination file already exists: {token.content['destination_file']}")
             self.log_to_token(token, "ERROR", "destination file already exists")
             status = False
 
@@ -45,9 +41,7 @@ class Mover(Filter):
         completed: bool = False
         # move the file
         try:
-            Path(token.content["source_file"]).rename(
-                Path(token.content["destination_file"])
-            )
+            Path(token.content["source_file"]).rename(Path(token.content["destination_file"]))
             self.log_to_token(token, level="INFO", message="moved file")
             completed = True
         except (FileNotFoundError, PermissionError) as e:

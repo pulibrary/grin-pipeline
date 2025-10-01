@@ -38,9 +38,7 @@ class Token:
     def name(self) -> str | None:
         return self.get_prop("barcode")
 
-    def write_log(
-        self, message: str, level: Optional[str] = None, stage: Optional[str] = None
-    ):
+    def write_log(self, message: str, level: Optional[str] = None, stage: Optional[str] = None):
         """Add a log entry to the token's processing history.
 
         Args:

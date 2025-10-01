@@ -20,7 +20,6 @@ from clients.auth_util import load_creds_or_die, build_auth_header
 load_dotenv()
 
 
-
 def rate_limiter(max_calls, period):
     """
     Decorator to limit the rate of function calls by blocking until calls are allowed.
@@ -67,7 +66,7 @@ class GrinClient:
     def __init__(self, directory: str = "PRNC") -> None:
         load_dotenv()  # ensure .env is read
         secrets = os.environ["GOOGLE_SECRETS_FILE"]
-        token   = os.environ["GOOGLE_TOKEN_FILE"]
+        token = os.environ["GOOGLE_TOKEN_FILE"]
 
         creds = load_creds_or_die(secrets, token)
         self.auth_header = build_auth_header(creds)
@@ -102,8 +101,7 @@ class GrinClient:
     def resource_url(self, resource_str):
         return f"{self.base_url}/{self.directory}/{resource_str}"
 
-
-    def _request(self, url: str, method: str="GET", **kwargs):
+    def _request(self, url: str, method: str = "GET", **kwargs):
         # Always include auth header, and surface *useful* errors
         headers = kwargs.pop("headers", {})
         headers = {**self.auth_header, **headers}
@@ -114,8 +112,9 @@ class GrinClient:
         except httpx.HTTPStatusError as e:
             # Show server payload to understand the failure
             text = getattr(e.response, "text", "")
-            raise RuntimeError(f"{e.request.method} {e.request.url} -> {e.response.status_code}\n{text}") from e
-
+            raise RuntimeError(
+                f"{e.request.method} {e.request.url} -> {e.response.status_code}\n{text}"
+            ) from e
 
     def grin_data(self, book_type) -> list:
         url = self.resource_url(f"_{book_type}?format=text&mode=all")
@@ -215,9 +214,7 @@ class GrinClient:
         responses = {}
         for barcode in barcode_list:
             url = f"{self.resource_url('_process')}?barcodes={barcode}"
-            response = httpx.post(
-                url=url, headers=self.auth_header, follow_redirects=True
-            )
+            response = httpx.post(url=url, headers=self.auth_header, follow_redirects=True)
 
             with io.StringIO(response.text) as f:
                 reader = csv.DictReader(f, delimiter="\t")
@@ -232,9 +229,7 @@ class GrinClient:
             #  'barcodes': '\n'.join(barcode_list)
             "barcodes": barcode_list
         }
-        response = httpx.post(
-            url=url, headers=self.auth_header, follow_redirects=True, data=data
-        )
+        response = httpx.post(url=url, headers=self.auth_header, follow_redirects=True, data=data)
 
         response_dict = {}
         with io.StringIO(response.text) as f:
@@ -245,9 +240,7 @@ class GrinClient:
         return response_dict
 
     def download_file(self, url, outpath):
-        with httpx.stream(
-            "GET", url, headers=self.auth_header, follow_redirects=True
-        ) as response:
+        with httpx.stream("GET", url, headers=self.auth_header, follow_redirects=True) as response:
             response.raise_for_status()
             with open(outpath, "wb") as f:
                 for chunk in response.iter_bytes():

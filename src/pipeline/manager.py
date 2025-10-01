@@ -40,11 +40,9 @@ class Manager:
         processing_bucket = Path(config["global"]["processing_bucket"])
         # Find the start bucket path from the bucket configuration
         start_bucket = Path(
-            [
-                bucket["path"]
-                for bucket in self.config["buckets"]
-                if bucket["name"] == "start"
-            ][0]  # Take the first (and should be only) start bucket
+            [bucket["path"] for bucket in self.config["buckets"] if bucket["name"] == "start"][
+                0
+            ]  # Take the first (and should be only) start bucket
         )
         self.stager = Stager(self.secretary, processing_bucket, start_bucket)
         self.pipeline = Pipeline(config)
@@ -173,9 +171,7 @@ if __name__ == "__main__":
     config: dict = load_config(config_path)
 
     # Set up logging
-    log_level = getattr(
-        logging, config.get("global", {}).get("log_level", "INFO").upper()
-    )
+    log_level = getattr(logging, config.get("global", {}).get("log_level", "INFO").upper())
 
     logging.basicConfig(level=log_level)
 

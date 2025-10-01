@@ -26,11 +26,9 @@ class Synchronizer:
 
         # Don't stage to the start bucket as usual; stage to the converted bucket
         pipeline_bucket = Path(
-            [
-                bucket["path"]
-                for bucket in self.config["buckets"]
-                if bucket["name"] == "converted"
-            ][0]
+            [bucket["path"] for bucket in self.config["buckets"] if bucket["name"] == "converted"][
+                0
+            ]
         )
         self.stager = Stager(self.secretary, processing_bucket, pipeline_bucket)
         self.pipeline = Pipeline(config)
@@ -56,9 +54,7 @@ class Synchronizer:
         ]
         return unchosen
 
-    def synchronize(
-        self, out_of_sync_only: bool = False, stage: bool = True
-    ) -> list[Book] | None:
+    def synchronize(self, out_of_sync_only: bool = False, stage: bool = True) -> list[Book] | None:
         """
         Synchronize ledger and bag with the converted books in GRIN.
 

@@ -13,9 +13,7 @@ class GoogleOAuth2Client:
 
     def authenticate(self):
         if self.token_file.exists():
-            self.creds = Credentials.from_authorized_user_file(
-                self.token_file, self.scopes
-            )
+            self.creds = Credentials.from_authorized_user_file(self.token_file, self.scopes)
 
         if not self.creds or not self.creds.valid:
             if self.creds and self.creds.expired and self.creds.refresh_token:

@@ -11,6 +11,7 @@ REQUIRED_SCOPES = [
     "https://www.googleapis.com/auth/userinfo.profile",
 ]
 
+
 def load_creds_or_die(secrets_path: str, token_path: str, scopes=None) -> Credentials:
     """
     Loads creds from token_path, refreshes if needed, and re-saves.
@@ -34,6 +35,7 @@ def load_creds_or_die(secrets_path: str, token_path: str, scopes=None) -> Creden
     # Optional: print quick debug info
     # print("Creds valid:", creds.valid, "Expired:", creds.expired, "Has refresh:", bool(creds.refresh_token))
     return creds
+
 
 def build_auth_header(creds: Credentials) -> dict:
     # Ensure we have a non-expired token. (If your client lives a long time, refresh periodically.)

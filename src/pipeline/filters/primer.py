@@ -7,9 +7,7 @@ import json
 from pathlib import Path
 from clients import GrinClient
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -34,9 +32,7 @@ class Primer:
         unprocessed_books = None
         if converted_books:
             unprocessed_books = [
-                book
-                for book in converted_books
-                if book["barcode"] not in processed_books
+                book for book in converted_books if book["barcode"] not in processed_books
             ]
         if unprocessed_books:
             for book in unprocessed_books:

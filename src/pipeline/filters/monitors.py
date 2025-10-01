@@ -43,9 +43,7 @@ class Monitor(Filter):
                 try:
                     processed: bool = self.process_token(token)
                     if processed:
-                        self.log_to_token(
-                            token, "INFO", f"{self.stage_name} ran successfully"
-                        )
+                        self.log_to_token(token, "INFO", f"{self.stage_name} ran successfully")
                         self.pipe.put_token()
                     else:
                         logging.error(f"{self.stage_name} did not process {token.name}")
@@ -93,17 +91,13 @@ class RequestMonitor(Monitor):
     @property
     def converted_barcodes(self):
         if self._converted_barcodes is None:
-            self._converted_barcodes = [
-                rec["barcode"] for rec in self.client.converted_books
-            ]
+            self._converted_barcodes = [rec["barcode"] for rec in self.client.converted_books]
         return self._converted_barcodes
 
     @property
     def in_process_barcodes(self):
         if self._in_process_barcodes is None:
-            self._in_process_barcodes = [
-                rec["barcode"] for rec in self.client.in_process_books
-            ]
+            self._in_process_barcodes = [rec["barcode"] for rec in self.client.in_process_books]
         return self._in_process_barcodes
 
     def is_in_process(self, token: Token) -> bool:
