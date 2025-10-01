@@ -1,17 +1,13 @@
-import sys
-import os
 import logging
+import os
+import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
-from pipeline.plumbing import Pipe, Filter, Token
 from clients import S3Client
+from pipeline.plumbing import Filter, Pipe, Token
 
-
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
-)
-
-logger: logging.Logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 
 class Uploader(Filter):
@@ -42,9 +38,7 @@ class Uploader(Filter):
         status: bool = True
         if self.infile(token).exists() is False:
             logging.error(f"source file does not exist: {self.infile(token)}")
-            self.log_to_token(
-                token, "ERROR", f"source file does not exist: {self.infile(token)}"
-            )
+            self.log_to_token(token, "ERROR", f"source file does not exist: {self.infile(token)}")
             status = False
         return status
 
@@ -90,7 +84,7 @@ class AWSUploader(Uploader):
         successflg = False
         barcode = token.get_prop("barcode")
 
-        logging.info(f"Store operation starting: {barcode}")
+        logging.debug(f"Store operation starting: {barcode}")
         if token.get_prop("upload_status") == "duplicate":
             self.log_to_token(token, "INFO", "Object already stored.")
             successflg = True
@@ -98,10 +92,11 @@ class AWSUploader(Uploader):
         else:
             status = self.client.store_object(barcode)
 
-            logging.info(f"Store operation complete: {barcode}")
+            logging.debug(f"Store operation complete: {barcode}")
             if status is True:
                 self.log_to_token(token, "INFO", "Object stored")
                 token.put_prop("upload_status", "success")
+                token.put_prop("when_uploaded", str(datetime.now(timezone.utc)))
                 successflg = True
             else:
                 logging.error(f"Object not stored: {barcode}")
@@ -119,9 +114,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if "LOCAL_DIR" not in os.environ:
-        print(
-            "Please set the LOCAL_DIR environment variable (probably the processing bucket)."
-        )
+        print("Please set the LOCAL_DIR environment variable (probably the processing bucket).")
         sys.exit(1)
 
     import argparse
@@ -135,5 +128,5 @@ if __name__ == "__main__":
     s3_client = S3Client(os.environ.get("LOCAL_DIR"), os.environ.get("OBJECT_STORE"))
 
     uploader: AWSUploader = AWSUploader(pipe, s3_client)
-    logger.info("starting uploader")
+    logging.debug("starting uploader")
     uploader.run_forever()

@@ -1,13 +1,12 @@
 import logging
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 from pipeline.plumbing import Filter, Pipe, Token
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -103,6 +102,7 @@ class Cleaner(Filter):
             else:
                 self.source_file(token).unlink()
                 self.log_to_token(token, "INFO", "Object deleted")
+            token.put_prop("when_finished", str(datetime.now(timezone.utc)))
             successflg = True
         except PermissionError as e:
             self.log_to_token(token, "ERROR", f"Object not moved! {e}")

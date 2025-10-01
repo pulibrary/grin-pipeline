@@ -3,13 +3,13 @@
 # Use to download files from GRIN.
 
 import logging
+from datetime import datetime, timezone
 from pathlib import Path
-from pipeline.plumbing import Pipe, Filter, Token
-from clients import GrinClient
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
-)
+from clients import GrinClient
+from pipeline.plumbing import Filter, Pipe, Token
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -54,6 +54,7 @@ class Downloader(Filter):
         dest = str(Path(token.content["processing_bucket"]))
         grin_client = GrinClient()
         grin_client.download_book(barcode, dest)
+        token.put_prop("when_downloaded", str(datetime.now(timezone.utc)))
         completed = True
         return completed
 

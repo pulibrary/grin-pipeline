@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timezone
 from enum import StrEnum
 from pathlib import Path
 
@@ -60,6 +61,7 @@ class Requester(Filter):
                 successflg = False
             else:
                 self.log_to_token(token, "INFO", status)
+                token.put_prop("when_requested", str(datetime.now(timezone.utc)))
                 successflg = True
         else:
             logging.error(f"submission of barcode for conversion failed: {barcode}")

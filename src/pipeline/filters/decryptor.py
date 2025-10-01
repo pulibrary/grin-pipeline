@@ -1,9 +1,11 @@
+import logging
 import os
 import subprocess
 import sys
-import logging
+from datetime import datetime, timezone
 from pathlib import Path
-from pipeline.plumbing import Pipe, Filter, Token
+
+from pipeline.plumbing import Filter, Pipe, Token
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -65,9 +67,7 @@ class Decryptor(Filter):
 
         if self.infile(token).exists() is False:
             logging.error(f"source file does not exist: {self.infile(token)}")
-            self.log_to_token(
-                token, "ERROR", f"source file does not exist: {self.infile(token)}"
-            )
+            self.log_to_token(token, "ERROR", f"source file does not exist: {self.infile(token)}")
             status = False
 
         return status
@@ -110,6 +110,7 @@ class Decryptor(Filter):
             successflg = True
             token.content["decryption_status"] = "success"
             self.infile(token).unlink()
+            token.put_prop("when_decrypted", str(datetime.now(timezone.utc)))
             self.log_to_token(token, "INFO", "Decryption successful")
 
         return successflg
