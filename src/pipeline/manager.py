@@ -1,15 +1,16 @@
-import sys
-import os
 import logging
+import os
 import signal
+import sys
 from pathlib import Path
-from pipeline.plumbing import Pipeline
-from pipeline.token_bag import TokenBag
+
 from pipeline.book_ledger import BookLedger
-from pipeline.stager import Stager
-from pipeline.secretary import Secretary
 from pipeline.config_loader import load_config
+from pipeline.plumbing import Pipeline
+from pipeline.secretary import Secretary
+from pipeline.stager import Stager
 from pipeline.synchronizer import Synchronizer
+from pipeline.token_bag import TokenBag
 
 
 class Manager:
@@ -83,7 +84,11 @@ class Manager:
 
     @property
     def ledger_status(self):
-        return {"chosen": self.secretary.chosen_books}
+        return {
+            "chosen": len(self.ledger.all_chosen_books),
+            "completed": len(self.ledger.all_completed_books),
+            "unprocessed": len(self.ledger.all_unprocessed_books),
+        }
 
     @property
     def token_bag_status(self):
