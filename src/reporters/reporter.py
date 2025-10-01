@@ -1,19 +1,15 @@
-import logging
 import os
 from collections import namedtuple
 from csv import DictWriter
 from io import StringIO
+from pathlib import Path
 
 from clients import GrinClient, S3Client
+from pipeline.book_ledger import Book, BookLedger
 from pipeline.config_loader import load_config
-
-config_path: str = os.environ.get("PIPELINE_CONFIG", "config.yml")
-config: dict = load_config(config_path)
-
-# Set up logging
-log_level = getattr(logging, config.get("global", {}).get("log_level", "INFO").upper())
-
-logging.basicConfig(level=log_level)
+from pipeline.plumbing import Pipeline
+from pipeline.secretary import Secretary
+from pipeline.token_bag import TokenBag
 
 S3Rec = namedtuple(
     "S3Rec",
@@ -37,19 +33,6 @@ class Reporter:
 
     def __init__(self) -> None:
         pass
-
-    def report(self, **kwargs) -> dict:
-        pass
-
-
-class ReporterOld:
-    """Family of classes that gather information about aspects of GRIN
-    and the GRIN pipeline: what barcodes have already been processed;
-    what barcodes are in process, converted, available; what barcodes
-    are available but have not yet been processed; etc."""
-
-    def __init__(self, grin_client: GrinClient):
-        self.grin_client = grin_client
 
     def report(self, **kwargs) -> dict:
         pass
@@ -91,3 +74,12 @@ class ObjectStoreReporter(Reporter):
                 return [ob.key for ob in self.objects_in_store()]
             case _:
                 return ""
+
+
+class SecretaryReporter(Reporter):
+    def __init__(self, config: dict) -> None:
+        super().__init__()
+        self.secretary = Secretary(
+            TokenBag(Path(config.get("global", {}).get("token_bag", None))),
+            BookLedger(Path(config.get("global", {}).get("ledger_file", None))),
+        )
