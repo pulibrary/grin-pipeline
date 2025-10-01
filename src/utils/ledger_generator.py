@@ -1,6 +1,7 @@
+from csv import DictWriter
 from dataclasses import fields
 from pathlib import Path
-from csv import DictWriter
+
 from clients import GrinClient, S3Client
 from pipeline.book_ledger import Book, BookStatus
 
@@ -12,6 +13,7 @@ class LedgerGenerator:
 
         self._grin_books = None
         self._ledger = None
+        self._s3_barcodes = None
         self._s3_books = None
 
     @property
@@ -23,7 +25,9 @@ class LedgerGenerator:
     @property
     def s3_books(self):
         if self._s3_books is None:
-            self._s3_books = set([obj.Key for obj in self.s3.list_objects()])
+            self._s3_books = {}
+            for object in self.s3.list_objects():
+                self._s3_books[object.Key] = object
         return self._s3_books
 
     @property
@@ -45,8 +49,9 @@ class LedgerGenerator:
         the ledger that is in the s3 bucket."""
 
         for rec in self.ledger:
-            if rec["barcode"] in self.s3_books:
+            if s3_book := self.s3_books.get(rec["barcode"]):
                 rec["status"] = BookStatus.COMPLETED
+                rec["date_completed"] = str(s3_book.LastModified)
 
     def dump_ledger(self, file_path: Path):
         fieldnames = [f.name for f in fields(Book)]
