@@ -91,13 +91,15 @@ class RequestMonitor(Monitor):
     @property
     def converted_barcodes(self):
         if self._converted_barcodes is None:
-            self._converted_barcodes = [rec["barcode"] for rec in self.client.converted_books]
+            client = GrinClient()
+            self._converted_barcodes = [rec["barcode"] for rec in client.converted_books]
         return self._converted_barcodes
 
     @property
     def in_process_barcodes(self):
         if self._in_process_barcodes is None:
-            self._in_process_barcodes = [rec["barcode"] for rec in self.client.in_process_books]
+            client = GrinClient()
+            self._in_process_barcodes = [rec["barcode"] for rec in client.in_process_books]
         return self._in_process_barcodes
 
     def is_in_process(self, token: Token) -> bool:
