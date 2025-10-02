@@ -4,6 +4,8 @@ import signal
 import sys
 from pathlib import Path
 
+from tabulate import tabulate
+
 from pipeline.book_ledger import BookLedger
 from pipeline.config_loader import load_config
 from pipeline.plumbing import Pipeline
@@ -11,6 +13,7 @@ from pipeline.secretary import Secretary
 from pipeline.stager import Stager
 from pipeline.synchronizer import Synchronizer
 from pipeline.token_bag import TokenBag
+from reporters.reporter import StatusReporter
 
 
 class Manager:
@@ -75,6 +78,10 @@ class Manager:
                 "help": "put the tokens into the pipeline",
                 "fn": self._stage_command,
             },
+            "status": {
+                "help": "get status of GRIN queues",
+                "fn": self._status_command,
+            },
             "help": {"help": "show commands", "fn": self._help_command},
         }
 
@@ -94,14 +101,19 @@ class Manager:
     def token_bag_status(self):
         return self.secretary.bag_size
 
-    def fill_token_bag(self, how_many: int = 20):
+    def fill_token_bag(self):
         """Fill the token bag with a specified number of books from the ledger.
 
         Args:
             how_many (int): Number of books to select from the ledger. Defaults to 20.
         """
-        self.secretary.choose_books(how_many)
-        self.secretary.commit()
+        how_many_input = input("How many tokens to take (int)? ")
+        try:
+            how_many = int(how_many_input)
+            self.secretary.choose_books(how_many)
+            self.secretary.commit()
+        except ValueError:
+            print("number of tokens must be an integer")
 
     def stage(self):
         """Stage tokens from the token bag into the pipeline start bucket.
@@ -149,6 +161,14 @@ class Manager:
         self.stager.update_tokens()
         self.stager.stage()
         print("Staged.")
+        return False
+
+    def _status_command(self):
+        reporter = StatusReporter(config)
+        report = reporter.report()
+        if report is not None:
+            print(tabulate(report))
+
         return False
 
     def run(self):
