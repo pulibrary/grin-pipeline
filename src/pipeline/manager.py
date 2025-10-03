@@ -101,15 +101,16 @@ class Manager:
     def token_bag_status(self):
         return self.secretary.bag_size
 
-    def fill_token_bag(self):
+    def fill_token_bag(self, how_many: int | None = None):
         """Fill the token bag with a specified number of books from the ledger.
 
         Args:
-            how_many (int): Number of books to select from the ledger. Defaults to 20.
+            how_many (int): Number of books to select from the ledger. Defaults to 1.
         """
-        how_many_input = input("How many tokens to take (int)? ")
-        try:
+        if how_many is None:
+            how_many_input = input("How many tokens to take (int)? ")
             how_many = int(how_many_input)
+        try:
             self.secretary.choose_books(how_many)
             self.secretary.commit()
         except ValueError:

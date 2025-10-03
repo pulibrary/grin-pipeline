@@ -1,10 +1,14 @@
-from pathlib import Path
 import shutil
+from pathlib import Path
+
+import pytest
 
 from pipeline.manager import Manager
+from pipeline.plumbing import Pipeline
 
 
-def test_manager(shared_datadir):
+@pytest.fixture
+def test_config(shared_datadir):
     tmpdir = Path("/tmp/test_manager")
     if tmpdir.is_dir():
         shutil.rmtree(tmpdir)
@@ -39,23 +43,30 @@ def test_manager(shared_datadir):
         {"name": "requested", "path": requested_bucket},
         {"name": "converted", "path": converted_bucket},
     ]
-    manager = Manager(config)
+    return config
 
+
+def test_manager(shared_datadir, test_config):
+    manager = Manager(test_config)
+    pipeline = Pipeline(test_config)
+
+    snapshot = manager.pipeline_status
     assert len(manager.pipeline_status["start"]["waiting_tokens"]) == 0
+    assert len(list(pipeline.bucket("start").glob("*.json"))) == 0
 
-    assert len(list(start_bucket.glob("*.json"))) == 0
+    status = manager.ledger_status
+    assert status["chosen"] == 0
+    assert status["completed"] == 0
+    assert status["unprocessed"] == 9
 
-    assert manager.ledger_status == {"chosen": []}
     assert manager.token_bag_status == 0
 
     manager.fill_token_bag(5)
     assert manager.token_bag_status == 5
-    assert all(
-        [
-            tok.get_prop("processing_bucket") is None
-            for tok in manager.secretary.bag.tokens
-        ]
-    )
+    assert manager.ledger_status["chosen"] == 5
+    assert manager.ledger_status["completed"] == 0
+    assert manager.ledger_status["unprocessed"] == 4
+    assert all([tok.get_prop("processing_bucket") is None for tok in manager.secretary.bag.tokens])
 
     manager.stage()
 
@@ -65,7 +76,7 @@ def test_manager(shared_datadir):
 
     assert all(
         [
-            tok.get_prop("processing_bucket") == str(processing_bucket)
+            tok.get_prop("processing_bucket") == str(test_config["global"]["processing_bucket"])
             for tok in manager.secretary.bag.tokens
         ]
     )
