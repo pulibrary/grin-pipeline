@@ -361,13 +361,14 @@ class Pipeline:
         buckets (dict): Mapping of bucket names to Path objects
     """
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict | None = None):
         self.config = config
         self.buckets = {}
-        for rec in self.config.get("buckets", {}):
-            name = rec.get("name", "")
-            location = Path(rec.get("path", "/dev/null"))
-            self.add_bucket(name, location)
+        if config is not None:
+            for rec in self.config.get("buckets", {}):
+                name = rec.get("name", "")
+                location = Path(rec.get("path", "/dev/null"))
+                self.add_bucket(name, location)
 
     def add_bucket(self, name: str, location: Path):
         self.buckets[name] = location
