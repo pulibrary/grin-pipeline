@@ -80,7 +80,6 @@ class RequestMonitor(Monitor):
 
     def __init__(self, pipe, poll_interval) -> None:
         super().__init__(pipe, poll_interval)
-        self.client: GrinClient = GrinClient()
         self._converted_barcodes = None
         self._in_process_barcodes = None
 

@@ -14,9 +14,6 @@ class Requester(Filter):
     The Requester filter takes tokens containing book barcodes and submits
     them to the GRIN service for conversion processing. This is typically
     the first processing stage in the pipeline.
-
-    Attributes:
-        grin (GrinClient): Client for communicating with the GRIN conversion service
     """
 
     class ERRORS(StrEnum):
@@ -25,7 +22,6 @@ class Requester(Filter):
 
     def __init__(self, pipe: Pipe) -> None:
         super().__init__(pipe)
-        self.grin: GrinClient = GrinClient()
 
     def validate_token(self, token: Token) -> bool:
         """Validate that the token contains required fields for conversion request.
@@ -52,7 +48,7 @@ class Requester(Filter):
         """
         successflg = False
         barcode = token.content["barcode"]
-        response = self.grin.convert_book(barcode)
+        response = GrinClient().convert_book(barcode)
         if response is not None:
             status = response[barcode]
             if status in self.ERRORS:
